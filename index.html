@@ -81,6 +81,121 @@
       padding: 30px;
     }
 
+    /* ============================================ */
+    /* 📊 ESTATÍSTICAS - MENU COMPACTO */
+    /* ============================================ */
+    .stats-container {
+      margin-bottom: 25px;
+    }
+
+    .stats-toggle {
+      display: none;
+      width: 100%;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .stats-toggle:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .stats-toggle-icon {
+      transition: transform 0.3s;
+      font-size: 1.2rem;
+    }
+
+    .stats-toggle.active .stats-toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .stats-content {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      transition: transform 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .stat-icon {
+      font-size: 1.5rem;
+      margin-bottom: 5px;
+      opacity: 0.9;
+    }
+
+    .stat-number {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 3px;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      line-height: 1.2;
+    }
+
+    /* Versão horizontal compacta (menu) */
+    .stats-horizontal {
+      display: none;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+
+    .stats-horizontal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .stat-mini {
+      color: white;
+      text-align: center;
+      padding: 8px 5px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(5px);
+    }
+
+    .stat-mini-number {
+      font-size: 1.5rem;
+      font-weight: bold;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+
+    .stat-mini-label {
+      font-size: 0.7rem;
+      opacity: 0.9;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
     /* ===== FILTROS ===== */
     .filter-section {
       background: #f8f9fa;
@@ -321,33 +436,6 @@
       background-color: #0056b3;
     }
 
-    /* ===== ESTATÍSTICAS ===== */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 15px;
-      margin-bottom: 30px;
-    }
-
-    .stat-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 20px;
-      border-radius: 8px;
-      text-align: center;
-    }
-
-    .stat-number {
-      font-size: 2.5rem;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-
-    .stat-label {
-      font-size: 0.9rem;
-      opacity: 0.9;
-    }
-
     .empty-state {
       text-align: center;
       padding: 3rem;
@@ -355,7 +443,7 @@
     }
 
     /* ============================================ */
-    /*  RESPONSIVIDADE - MOBILE */
+    /* 📱 RESPONSIVIDADE - MOBILE */
     /* ============================================ */
 
     /* Tablets (até 768px) */
@@ -394,6 +482,15 @@
         padding: 15px;
       }
 
+      /* Esconde cards grandes e mostra versão horizontal compacta */
+      .stats-content {
+        display: none;
+      }
+
+      .stats-horizontal {
+        display: block;
+      }
+
       .filter-section {
         padding: 15px;
       }
@@ -416,23 +513,6 @@
         gap: 15px;
       }
 
-      .stats {
-        grid-template-columns: 1fr;
-        gap: 10px;
-      }
-
-      .stat-card {
-        padding: 15px;
-      }
-
-      .stat-number {
-        font-size: 2rem;
-      }
-
-      .stat-label {
-        font-size: 0.85rem;
-      }
-
       th, td {
         padding: 10px 8px;
         font-size: 0.85rem;
@@ -444,7 +524,7 @@
       }
     }
 
-    /* Celulares pequenos (até 480px) */
+    /* Celulares pequenos (até 480px) - Menu colapsável */
     @media (max-width: 480px) {
       body {
         padding: 0;
@@ -476,6 +556,47 @@
         padding: 10px;
       }
 
+      /* Mostra botão toggle e esconde menu horizontal */
+      .stats-toggle {
+        display: flex;
+      }
+
+      .stats-horizontal {
+        display: none;
+      }
+
+      .stats-content {
+        display: none;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .stats-content.expanded {
+        display: grid;
+      }
+
+      .stat-card {
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        text-align: left;
+      }
+
+      .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 0;
+      }
+
+      .stat-number {
+        font-size: 1.5rem;
+      }
+
+      .stat-label {
+        font-size: 0.8rem;
+      }
+
       .filter-section {
         padding: 12px;
         margin-bottom: 20px;
@@ -494,14 +615,6 @@
 
       .booking-section {
         margin-bottom: 25px;
-      }
-
-      .stat-number {
-        font-size: 1.8rem;
-      }
-
-      .stat-label {
-        font-size: 0.8rem;
       }
 
       .modal-content {
@@ -555,6 +668,10 @@
       input, select {
         min-height: 44px;
       }
+
+      .stats-toggle {
+        min-height: 44px;
+      }
     }
   </style>
 </head>
@@ -573,19 +690,74 @@
     </header>
 
     <div class="content">
-      <!-- Estatísticas -->
-      <div class="stats">
-        <div class="stat-card">
-          <div class="stat-number" id="totalBookings">0</div>
-          <div class="stat-label">Total de Agendamentos</div>
+      <!-- ============================================ -->
+      <!-- 📊 ESTATÍSTICAS - 3 VERSÕES PARA DIFERENTES TELAS -->
+      <!-- ============================================ -->
+      <div class="stats-container">
+        <!-- Versão Desktop: Cards normais -->
+        <div class="stats-content" id="statsContent">
+          <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-number" id="totalBookings">0</div>
+            <div class="stat-label">Total de Agendamentos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-number" id="todayBookings">0</div>
+            <div class="stat-label">Agendamentos Hoje</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📆</div>
+            <div class="stat-number" id="weekBookings">0</div>
+            <div class="stat-label">Esta Semana</div>
+          </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-number" id="todayBookings">0</div>
-          <div class="stat-label">Agendamentos Hoje</div>
+
+        <!-- Versão Tablet: Menu horizontal compacto -->
+        <div class="stats-horizontal">
+          <div class="stats-horizontal-grid">
+            <div class="stat-mini">
+              <div class="stat-mini-number" id="totalBookingsMini">0</div>
+              <div class="stat-mini-label">Total</div>
+            </div>
+            <div class="stat-mini">
+              <div class="stat-mini-number" id="todayBookingsMini">0</div>
+              <div class="stat-mini-label">Hoje</div>
+            </div>
+            <div class="stat-mini">
+              <div class="stat-mini-number" id="weekBookingsMini">0</div>
+              <div class="stat-mini-label">Semana</div>
+            </div>
+          </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-number" id="weekBookings">0</div>
-          <div class="stat-label">Esta Semana</div>
+
+        <!-- Versão Celular: Botão colapsável -->
+        <button class="stats-toggle" id="statsToggle" onclick="toggleStats()">
+          <span>📊 Ver Estatísticas</span>
+          <span class="stats-toggle-icon">▼</span>
+        </button>
+        <div class="stats-content" id="statsContentMobile">
+          <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div>
+              <div class="stat-number" id="totalBookingsMobile">0</div>
+              <div class="stat-label">Total de Agendamentos</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div>
+              <div class="stat-number" id="todayBookingsMobile">0</div>
+              <div class="stat-label">Agendamentos Hoje</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📆</div>
+            <div>
+              <div class="stat-number" id="weekBookingsMobile">0</div>
+              <div class="stat-label">Esta Semana</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -594,11 +766,11 @@
         <h2 class="filter-title">🔍 Filtrar Agendamentos</h2>
         <div class="filter-grid">
           <div class="form-group">
-            <label for="filterDate"> Data:</label>
+            <label for="filterDate">📅 Data:</label>
             <input type="date" id="filterDate">
           </div>
           <div class="form-group">
-            <label for="filterProfessor">👨‍ Professor:</label>
+            <label for="filterProfessor">👨‍🏫 Professor:</label>
             <input type="text" id="filterProfessor" placeholder="Digite o nome do professor">
           </div>
           <div class="form-group" style="display: flex; align-items: flex-end;">
@@ -784,7 +956,7 @@
       if (confirm('Tem certeza que deseja cancelar este agendamento?')) {
         try {
           await db.collection(COLLECTION_NAME).doc(id).delete();
-          showModal('️', 'Agendamento cancelado com sucesso!');
+          showModal('🗑️', 'Agendamento cancelado com sucesso!');
         } catch (error) {
           console.error('❌ Erro ao cancelar:', error);
           showModal('❌', 'Erro ao cancelar agendamento.');
@@ -827,7 +999,6 @@
       });
 
       renderBookings();
-      updateStats();
     }
 
     function clearFilters() {
@@ -835,7 +1006,6 @@
       document.getElementById('filterProfessor').value = '';
       filteredBookings = [...bookings];
       renderBookings();
-      updateStats();
     }
 
     // ============================================
@@ -850,12 +1020,12 @@
       const endTime = document.getElementById('endTime').value;
 
       if (!personName || !date || !startTime || !endTime) {
-        showModal('️', 'Por favor, preencha todos os campos!');
+        showModal('⚠️', 'Por favor, preencha todos os campos!');
         return;
       }
 
       if (startTime >= endTime) {
-        showModal('️', 'O horário de término deve ser maior que o horário de início!');
+        showModal('⚠️', 'O horário de término deve ser maior que o horário de início!');
         return;
       }
 
@@ -896,7 +1066,7 @@
         const row = document.createElement('tr');
         row.innerHTML = `
           <td colspan="5" style="text-align: center; padding: 3rem; color: #666;">
-            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></div>
+            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📋</div>
             <div>Nenhum agendamento encontrado</div>
           </td>
         `;
@@ -956,7 +1126,7 @@
     }
 
     // ============================================
-    // ESTATÍSTICAS
+    // ESTATÍSTICAS - ATUALIZAÇÃO EM TODAS AS VERSÕES
     // ============================================
     function updateStats() {
       const today = new Date().toISOString().split('T')[0];
@@ -968,9 +1138,29 @@
         return bookingDate >= thisWeek.start && bookingDate <= thisWeek.end;
       }).length;
 
-      document.getElementById('totalBookings').textContent = bookings.length;
-      document.getElementById('todayBookings').textContent = todayCount;
-      document.getElementById('weekBookings').textContent = weekCount;
+      const total = bookings.length;
+
+      // Atualiza versão Desktop
+      updateElement('totalBookings', total);
+      updateElement('todayBookings', todayCount);
+      updateElement('weekBookings', weekCount);
+
+      // Atualiza versão Tablet (horizontal)
+      updateElement('totalBookingsMini', total);
+      updateElement('todayBookingsMini', todayCount);
+      updateElement('weekBookingsMini', weekCount);
+
+      // Atualiza versão Mobile (colapsável)
+      updateElement('totalBookingsMobile', total);
+      updateElement('todayBookingsMobile', todayCount);
+      updateElement('weekBookingsMobile', weekCount);
+    }
+
+    function updateElement(id, value) {
+      const element = document.getElementById(id);
+      if (element) {
+        element.textContent = value;
+      }
     }
 
     function getWeekRange(date) {
@@ -984,6 +1174,22 @@
         start: new Date(start.setHours(0, 0, 0, 0)),
         end: new Date(end.setHours(23, 59, 59, 999))
       };
+    }
+
+    // ============================================
+    // TOGGLE ESTATÍSTICAS (MOBILE)
+    // ============================================
+    function toggleStats() {
+      const toggleBtn = document.getElementById('statsToggle');
+      const mobileContent = document.getElementById('statsContentMobile');
+      
+      toggleBtn.classList.toggle('active');
+      mobileContent.classList.toggle('expanded');
+      
+      // Atualiza o texto do botão
+      const isExpanded = mobileContent.classList.contains('expanded');
+      toggleBtn.querySelector('span:first-child').textContent = 
+        isExpanded ? '📊 Ocultar Estatísticas' : '📊 Ver Estatísticas';
     }
 
     // ============================================
