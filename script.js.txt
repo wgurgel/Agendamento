@@ -1,399 +1,443 @@
 // ============================================
-// SISTEMA DE AGENDAMENTO DA SALA DE VÍDEO
-// Escola Estadual Governador Walfredo Gurgel
+// SISTEMA DE AGENDAMENTO DE SALA DE VÍDEO
+// Com Firebase Firestore
 // ============================================
 
 // Variáveis globais
 let bookings = [];
-const STORAGE_KEY = 'salaVideoBookings';
 
 // ============================================
-// INICIALIZAÇÃO
+// FUNÇÕES DE INICIALIZAÇÃO
 // ============================================
 
-// Carregar dados ao iniciar
+/**
+ * Inicializa o sistema quando a página carrega
+ */
 document.addEventListener('DOMContentLoaded', () => {
-    loadBookings();
-    updateCurrentTime();
-    setInterval(updateCurrentTime, 1000);
-    setDefaultDate();
-    renderBookings();
-    attachEventListeners();
+  loadBookings();
+  setDefaultDate();
+  setupEventListeners();
 });
 
-// ============================================
-// FUNÇÕES DE UTILITÁRIO
-// ============================================
-
 /**
- * Atualiza o horário atual no topo da página
+ * Configura os eventos dos botões e formulários
  */
-function updateCurrentTime() {
-    const now = new Date();
-    const options = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    };
-    const timeString = now.toLocaleDateString('pt-BR', options);
-    document.getElementById('currentTime').textContent = `🕐 ${timeString}`;
+function setupEventListeners() {
+  // Formulário de agendamento
+  const bookingForm = document.getElementById('bookingForm');
+  if (bookingForm) {
+    bookingForm.addEventListener('submit', handleBookingSubmit);
+  }
+
+  // Botão de limpar tudo
+  const clearBtn = document.getElementById('clearAllBtn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', clearAllBookings);
+  }
+
+  // Filtro de data
+  const filterDate = document.getElementById('filterDate');
+  if (filterDate) {
+    filterDate.addEventListener('change', renderBookings);
+  }
 }
 
 /**
- * Define a data padrão como hoje
+ * Define a data padrão para hoje
  */
 function setDefaultDate() {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('bookingDate').value = today;
-    document.getElementById('filterDate').value = today;
-}
-
-/**
- * Converte hora (HH:MM) para minutos desde meia-noite
- */
-function timeToMinutes(time) {
-    const [hours, minutes] = time.split(':').map(Number);
-    return hours * 60 + minutes;
-}
-
-/**
- * Formata data de ISO para formato brasileiro
- */
-function formatDate(dateString) {
-    const [year, month, day] = dateString.split('-');
-    return `${day}/${month}/${year}`;
-}
-
-/**
- * Gera um ID único para cada agendamento
- */
-function generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  const today = new Date().toISOString().split('T')[0];
+  const bookingDate = document.getElementById('bookingDate');
+  const filterDate = document.getElementById('filterDate');
+  
+  if (bookingDate) bookingDate.value = today;
+  if (filterDate) filterDate.value = today;
 }
 
 // ============================================
-// PERSISTÊNCIA DE DADOS (LocalStorage)
+// FUNÇÕES DO FIREBASE
 // ============================================
 
 /**
- * Carrega os agendamentos do LocalStorage
+ * Carrega os agendamentos do Firebase Firestore em tempo real
  */
 function loadBookings() {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-        bookings = JSON.parse(stored);
-    }
-}
-
-/**
- * Salva os agendamentos no LocalStorage
- */
-function saveBookings() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
-}
-
-// ============================================
-// VALIDAÇÕES
-// ============================================
-
-/**
- * Verifica se há conflito de horário
- */
-function checkTimeConflict(date, startTime, endTime, excludeId = null) {
-    const newStart = timeToMinutes(startTime);
-    const newEnd = timeToMinutes(endTime);
-
-    return bookings.some(booking => {
-        // Ignora o próprio agendamento ao editar
-        if (excludeId && booking.id === excludeId) return false;
-        
-        // Verifica se é na mesma data
-        if (booking.date !== date) return false;
-
-        const bookingStart = timeToMinutes(booking.startTime);
-        const bookingEnd = timeToMinutes(booking.endTime);
-
-        // Verifica sobreposição
-        return (newStart < bookingEnd && newEnd > bookingStart);
+  db.collection(COLLECTION_NAME)
+    .orderBy('date')
+    .orderBy('startTime')
+    .onSnapshot((snapshot) => {
+      bookings = [];
+      snapshot.forEach((doc) => {
+        bookings.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      renderBookings();
+      console.log('✅ Agendamentos carregados:', bookings.length);
+    }, (error) => {
+      console.error('❌ Erro ao carregar:', error);
+      showModal('❌', 'Erro ao carregar agendamentos. Verifique o console.');
     });
 }
 
 /**
- * Valida o formulário de agendamento
+ * Adiciona um novo agendamento no Firebase
  */
-function validateForm(personName, date, startTime, endTime) {
-    // Verifica campos vazios
-    if (!personName.trim()) {
-        return { valid: false, message: 'Por favor, preencha o nome da pessoa.' };
-    }
+async function addBooking(personName, date, startTime, endTime) {
+  const booking = {
+    personName: personName.trim(),
+    date: date,
+    startTime: startTime,
+    endTime: endTime,
+    status: 'Ocupado',
+    createdAt: new Date().toISOString()
+  };
 
-    if (!date) {
-        return { valid: false, message: 'Por favor, selecione uma data.' };
-    }
-
-    if (!startTime || !endTime) {
-        return { valid: false, message: 'Por favor, preencha os horários de início e término.' };
-    }
-
-    // Verifica se horário final é maior que o inicial
-    if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
-        return { 
-            valid: false, 
-            message: 'O horário de término deve ser posterior ao horário de início.' 
-        };
-    }
-
-    // Verifica conflito de horário
-    if (checkTimeConflict(date, startTime, endTime)) {
-        return { 
-            valid: false, 
-            message: '⚠️ Este horário já está ocupado. Escolha outro horário.' 
-        };
-    }
-
-    return { valid: true };
-}
-
-// ============================================
-// GERENCIAMENTO DE AGENDAMENTOS
-// ============================================
-
-/**
- * Adiciona um novo agendamento
- */
-function addBooking(personName, date, startTime, endTime) {
-    const booking = {
-        id: generateId(),
-        personName: personName.trim(),
-        date: date,
-        startTime: startTime,
-        endTime: endTime,
-        status: 'Ocupado',
-        createdAt: new Date().toISOString()
-    };
-
-    bookings.push(booking);
-    saveBookings();
-    renderBookings();
+  try {
+    await db.collection(COLLECTION_NAME).add(booking);
     showModal('✅', 'Agendamento realizado com sucesso!');
+  } catch (error) {
+    console.error('❌ Erro ao salvar:', error);
+    showModal('❌', 'Erro ao salvar agendamento.');
+  }
 }
 
 /**
- * Cancela um agendamento
+ * Cancela um agendamento no Firebase
  */
-function cancelBooking(id) {
-    if (confirm('Tem certeza que deseja cancelar este agendamento?')) {
-        bookings = bookings.filter(booking => booking.id !== id);
-        saveBookings();
-        renderBookings();
-        showModal('🗑️', 'Agendamento cancelado com sucesso!');
+async function cancelBooking(id) {
+  if (confirm('Tem certeza que deseja cancelar este agendamento?')) {
+    try {
+      await db.collection(COLLECTION_NAME).doc(id).delete();
+      showModal('🗑️', 'Agendamento cancelado com sucesso!');
+    } catch (error) {
+      console.error('❌ Erro ao cancelar:', error);
+      showModal('❌', 'Erro ao cancelar agendamento.');
     }
+  }
 }
 
 /**
- * Limpa todos os agendamentos
+ * Limpa todos os agendamentos do Firebase
  */
-function clearAllBookings() {
-    if (confirm('⚠️ ATENÇÃO: Tem certeza que deseja apagar TODOS os agendamentos? Esta ação não pode ser desfeita!')) {
-        if (confirm('Esta é sua última chance. Deseja realmente apagar tudo?')) {
-            bookings = [];
-            saveBookings();
-            renderBookings();
-            showModal('🗑️', 'Todos os agendamentos foram removidos!');
-        }
+async function clearAllBookings() {
+  if (confirm('️ ATENÇÃO: Apagar TODOS os agendamentos?')) {
+    if (confirm('Última chance. Deseja realmente apagar tudo?')) {
+      try {
+        const snapshot = await db.collection(COLLECTION_NAME).get();
+        const batch = db.batch();
+        snapshot.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+        showModal('️', 'Todos os agendamentos foram removidos!');
+      } catch (error) {
+        console.error('❌ Erro ao limpar:', error);
+        showModal('❌', 'Erro ao limpar agendamentos.');
+      }
     }
+  }
 }
 
 // ============================================
-// RENDERIZAÇÃO E FILTROS
+// FUNÇÕES DE MANIPULAÇÃO DO FORMULÁRIO
 // ============================================
 
 /**
- * Renderiza a lista de agendamentos com filtros aplicados
+ * Manipula o envio do formulário de agendamento
+ */
+function handleBookingSubmit(event) {
+  event.preventDefault();
+
+  const personName = document.getElementById('personName').value;
+  const date = document.getElementById('bookingDate').value;
+  const startTime = document.getElementById('startTime').value;
+  const endTime = document.getElementById('endTime').value;
+
+  // Validações
+  if (!personName || !date || !startTime || !endTime) {
+    showModal('⚠️', 'Por favor, preencha todos os campos!');
+    return;
+  }
+
+  if (startTime >= endTime) {
+    showModal('⚠️', 'O horário de término deve ser maior que o horário de início!');
+    return;
+  }
+
+  // Verifica se já existe agendamento conflitante
+  if (hasTimeConflict(date, startTime, endTime)) {
+    showModal('⚠️', 'Já existe um agendamento neste horário!');
+    return;
+  }
+
+  // Adiciona o agendamento
+  addBooking(personName, date, startTime, endTime);
+
+  // Limpa o formulário
+  document.getElementById('bookingForm').reset();
+  setDefaultDate();
+}
+
+/**
+ * Verifica se existe conflito de horário
+ */
+function hasTimeConflict(date, startTime, endTime) {
+  return bookings.some(booking => {
+    if (booking.date !== date || booking.status !== 'Ocupado') {
+      return false;
+    }
+
+    return (
+      (startTime >= booking.startTime && startTime < booking.endTime) ||
+      (endTime > booking.startTime && endTime <= booking.endTime) ||
+      (startTime <= booking.startTime && endTime >= booking.endTime)
+    );
+  });
+}
+
+// ============================================
+// FUNÇÕES DE RENDERIZAÇÃO
+// ============================================
+
+/**
+ * Renderiza a tabela de agendamentos
  */
 function renderBookings() {
-    const searchName = document.getElementById('searchName').value.toLowerCase();
-    const filterDate = document.getElementById('filterDate').value;
-    
-    // Filtra agendamentos
-    let filteredBookings = bookings.filter(booking => {
-        const matchName = booking.personName.toLowerCase().includes(searchName);
-        const matchDate = !filterDate || booking.date === filterDate;
-        return matchName && matchDate;
-    });
+  const tableBody = document.querySelector('#bookingsTable tbody');
+  if (!tableBody) return;
 
-    // Ordena por data e horário
-    filteredBookings.sort((a, b) => {
-        if (a.date !== b.date) {
-            return a.date.localeCompare(b.date);
-        }
-        return timeToMinutes(a.startTime) - timeToMinutes(b.startTime);
-    });
+  tableBody.innerHTML = '';
 
-    // Atualiza contador
-    document.getElementById('bookingCounter').textContent = 
-        `${filteredBookings.length} agendamento(s)`;
+  const filterDate = document.getElementById('filterDate');
+  const selectedDate = filterDate ? filterDate.value : '';
 
-    // Renderiza tabela
-    const tbody = document.getElementById('bookingsBody');
-    const emptyState = document.getElementById('emptyState');
+  // Filtra os agendamentos pela data selecionada
+  const filteredBookings = selectedDate
+    ? bookings.filter(b => b.date === selectedDate)
+    : bookings;
 
-    if (filteredBookings.length === 0) {
-        tbody.innerHTML = '';
-        emptyState.classList.add('show');
-    } else {
-        emptyState.classList.remove('show');
-        tbody.innerHTML = filteredBookings.map(booking => `
-            <tr>
-                <td>${formatDate(booking.date)}</td>
-                <td>${booking.startTime}</td>
-                <td>${booking.endTime}</td>
-                <td>${booking.personName}</td>
-                <td>
-                    <span class="status-badge status-occupied">
-                        ${booking.status}
-                    </span>
-                </td>
-                <td>
-                    <button class="btn btn-danger btn-small" onclick="cancelBooking('${booking.id}')">
-                        ❌ Cancelar
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-    }
+  if (filteredBookings.length === 0) {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td colspan="5" style="text-align: center; padding: 2rem; color: #666;">
+        Nenhum agendamento encontrado${selectedDate ? ' para esta data' : ''}.
+      </td>
+    `;
+    tableBody.appendChild(row);
+    return;
+  }
+
+  // Ordena por horário
+  filteredBookings.sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+  // Renderiza cada agendamento
+  filteredBookings.forEach(booking => {
+    const row = createBookingRow(booking);
+    tableBody.appendChild(row);
+  });
 }
 
-// ============================================
-// EXPORTAÇÃO E IMPRESSÃO
-// ============================================
-
 /**
- * Exporta agendamentos para CSV
+ * Cria uma linha da tabela para um agendamento
  */
-function exportToCSV() {
-    if (bookings.length === 0) {
-        showModal('⚠️', 'Não há agendamentos para exportar!');
-        return;
-    }
+function createBookingRow(booking) {
+  const row = document.createElement('tr');
 
-    // Cabeçalho do CSV
-    let csv = 'Data,Hora Início,Hora Término,Nome,Status\n';
-    
-    // Adiciona dados
-    bookings.forEach(booking => {
-        csv += `${formatDate(booking.date)},${booking.startTime},${booking.endTime},"${booking.personName}",${booking.status}\n`;
-    });
+  // Formata a data para exibição
+  const dateObj = new Date(booking.date + 'T00:00:00');
+  const dateFormatted = dateObj.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
 
-    // Cria e baixa o arquivo
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `agendamentos_sala_video_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  row.innerHTML = `
+    <td>${dateFormatted}</td>
+    <td>${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}</td>
+    <td>${escapeHtml(booking.personName)}</td>
+    <td><span class="status-badge status-${booking.status.toLowerCase()}">${booking.status}</span></td>
+    <td>
+      <button onclick="cancelBooking('${booking.id}')" 
+              class="btn-cancel" 
+              title="Cancelar agendamento">
+        🗑️ Cancelar
+      </button>
+    </td>
+  `;
 
-    showModal('✅', 'Arquivo CSV exportado com sucesso!');
+  return row;
 }
 
 /**
- * Imprime a agenda do dia
+ * Formata o horário para exibição (HH:MM)
  */
-function printSchedule() {
-    window.print();
+function formatTime(time) {
+  return time.substring(0, 5);
+}
+
+/**
+ * Escapa caracteres HTML para prevenir XSS
+ */
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 // ============================================
-// MODAL DE MENSAGENS
+// FUNÇÕES DE UTILIDADE
 // ============================================
 
 /**
- * Exibe modal com mensagem
+ * Exibe um modal de mensagem
  */
 function showModal(icon, message) {
-    const overlay = document.getElementById('modalOverlay');
-    const modalIcon = document.getElementById('modalIcon');
-    const modalMessage = document.getElementById('modalMessage');
+  // Cria o modal se não existir
+  let modal = document.getElementById('messageModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'messageModal';
+    modal.className = 'modal';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-icon"></div>
+        <div class="modal-message"></div>
+        <button class="modal-close">OK</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
 
-    modalIcon.textContent = icon;
-    modalMessage.textContent = message;
-    overlay.classList.add('show');
-}
+    // Fecha o modal ao clicar no botão OK ou fora dele
+    modal.querySelector('.modal-close').addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
 
-/**
- * Fecha o modal
- */
-function closeModal() {
-    document.getElementById('modalOverlay').classList.remove('show');
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+  }
+
+  // Atualiza o conteúdo
+  modal.querySelector('.modal-icon').textContent = icon;
+  modal.querySelector('.modal-message').textContent = message;
+  modal.style.display = 'flex';
+
+  // Fecha automaticamente após 3 segundos
+  setTimeout(() => {
+    modal.style.display = 'none';
+  }, 3000);
 }
 
 // ============================================
-// EVENT LISTENERS
+// ESTILOS CSS (injetados dinamicamente)
 // ============================================
 
-/**
- * Anexa todos os event listeners
- */
-function attachEventListeners() {
-    // Formulário de agendamento
-    document.getElementById('bookingForm').addEventListener('submit', (e) => {
-        e.preventDefault();
+const styles = `
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
 
-        const personName = document.getElementById('personName').value;
-        const date = document.getElementById('bookingDate').value;
-        const startTime = document.getElementById('startTime').value;
-        const endTime = document.getElementById('endTime').value;
+  .modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 300px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
 
-        const validation = validateForm(personName, date, startTime, endTime);
+  .modal-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
 
-        if (validation.valid) {
-            addBooking(personName, date, startTime, endTime);
-            e.target.reset();
-            setDefaultDate();
-        } else {
-            showModal('⚠️', validation.message);
-        }
-    });
+  .modal-message {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+  }
 
-    // Filtros
-    document.getElementById('searchName').addEventListener('input', renderBookings);
-    document.getElementById('filterDate').addEventListener('change', renderBookings);
+  .modal-close {
+    padding: 0.5rem 2rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
 
-    // Botão Hoje
-    document.getElementById('btnToday').addEventListener('click', () => {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('filterDate').value = today;
-        renderBookings();
-    });
+  .modal-close:hover {
+    background-color: #0056b3;
+  }
 
-    // Botão Limpar Filtros
-    document.getElementById('btnClearFilters').addEventListener('click', () => {
-        document.getElementById('searchName').value = '';
-        document.getElementById('filterDate').value = '';
-        renderBookings();
-    });
+  .status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
 
-    // Botão Exportar CSV
-    document.getElementById('btnExportCSV').addEventListener('click', exportToCSV);
+  .status-ocupado {
+    background-color: #fee2e2;
+    color: #dc2626;
+  }
 
-    // Botão Imprimir
-    document.getElementById('btnPrint').addEventListener('click', printSchedule);
+  .status-disponivel {
+    background-color: #d1fae5;
+    color: #059669;
+  }
 
-    // Botão Limpar Tudo
-    document.getElementById('btnClearAll').addEventListener('click', clearAllBookings);
+  .btn-cancel {
+    padding: 0.5rem 1rem;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+  }
 
-    // Fechar modal
-    document.getElementById('modalClose').addEventListener('click', closeModal);
-    document.getElementById('modalOverlay').addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) {
-            closeModal();
-        }
-    });
-}
+  .btn-cancel:hover {
+    background-color: #c82333;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+
+  th, td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+
+  th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+  }
+
+  tr:hover {
+    background-color: #f5f5f5;
+  }
+`;
+
+// Injeta os estilos no head
+const styleSheet = document.createElement('style');
+styleSheet.textContent = styles;
+document.head.appendChild(styleSheet);
