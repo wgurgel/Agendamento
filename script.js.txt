@@ -1,0 +1,399 @@
+// ============================================
+// SISTEMA DE AGENDAMENTO DA SALA DE VÍDEO
+// Escola Estadual Governador Walfredo Gurgel
+// ============================================
+
+// Variáveis globais
+let bookings = [];
+const STORAGE_KEY = 'salaVideoBookings';
+
+// ============================================
+// INICIALIZAÇÃO
+// ============================================
+
+// Carregar dados ao iniciar
+document.addEventListener('DOMContentLoaded', () => {
+    loadBookings();
+    updateCurrentTime();
+    setInterval(updateCurrentTime, 1000);
+    setDefaultDate();
+    renderBookings();
+    attachEventListeners();
+});
+
+// ============================================
+// FUNÇÕES DE UTILITÁRIO
+// ============================================
+
+/**
+ * Atualiza o horário atual no topo da página
+ */
+function updateCurrentTime() {
+    const now = new Date();
+    const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    };
+    const timeString = now.toLocaleDateString('pt-BR', options);
+    document.getElementById('currentTime').textContent = `🕐 ${timeString}`;
+}
+
+/**
+ * Define a data padrão como hoje
+ */
+function setDefaultDate() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('bookingDate').value = today;
+    document.getElementById('filterDate').value = today;
+}
+
+/**
+ * Converte hora (HH:MM) para minutos desde meia-noite
+ */
+function timeToMinutes(time) {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+}
+
+/**
+ * Formata data de ISO para formato brasileiro
+ */
+function formatDate(dateString) {
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+}
+
+/**
+ * Gera um ID único para cada agendamento
+ */
+function generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+// ============================================
+// PERSISTÊNCIA DE DADOS (LocalStorage)
+// ============================================
+
+/**
+ * Carrega os agendamentos do LocalStorage
+ */
+function loadBookings() {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+        bookings = JSON.parse(stored);
+    }
+}
+
+/**
+ * Salva os agendamentos no LocalStorage
+ */
+function saveBookings() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+}
+
+// ============================================
+// VALIDAÇÕES
+// ============================================
+
+/**
+ * Verifica se há conflito de horário
+ */
+function checkTimeConflict(date, startTime, endTime, excludeId = null) {
+    const newStart = timeToMinutes(startTime);
+    const newEnd = timeToMinutes(endTime);
+
+    return bookings.some(booking => {
+        // Ignora o próprio agendamento ao editar
+        if (excludeId && booking.id === excludeId) return false;
+        
+        // Verifica se é na mesma data
+        if (booking.date !== date) return false;
+
+        const bookingStart = timeToMinutes(booking.startTime);
+        const bookingEnd = timeToMinutes(booking.endTime);
+
+        // Verifica sobreposição
+        return (newStart < bookingEnd && newEnd > bookingStart);
+    });
+}
+
+/**
+ * Valida o formulário de agendamento
+ */
+function validateForm(personName, date, startTime, endTime) {
+    // Verifica campos vazios
+    if (!personName.trim()) {
+        return { valid: false, message: 'Por favor, preencha o nome da pessoa.' };
+    }
+
+    if (!date) {
+        return { valid: false, message: 'Por favor, selecione uma data.' };
+    }
+
+    if (!startTime || !endTime) {
+        return { valid: false, message: 'Por favor, preencha os horários de início e término.' };
+    }
+
+    // Verifica se horário final é maior que o inicial
+    if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+        return { 
+            valid: false, 
+            message: 'O horário de término deve ser posterior ao horário de início.' 
+        };
+    }
+
+    // Verifica conflito de horário
+    if (checkTimeConflict(date, startTime, endTime)) {
+        return { 
+            valid: false, 
+            message: '⚠️ Este horário já está ocupado. Escolha outro horário.' 
+        };
+    }
+
+    return { valid: true };
+}
+
+// ============================================
+// GERENCIAMENTO DE AGENDAMENTOS
+// ============================================
+
+/**
+ * Adiciona um novo agendamento
+ */
+function addBooking(personName, date, startTime, endTime) {
+    const booking = {
+        id: generateId(),
+        personName: personName.trim(),
+        date: date,
+        startTime: startTime,
+        endTime: endTime,
+        status: 'Ocupado',
+        createdAt: new Date().toISOString()
+    };
+
+    bookings.push(booking);
+    saveBookings();
+    renderBookings();
+    showModal('✅', 'Agendamento realizado com sucesso!');
+}
+
+/**
+ * Cancela um agendamento
+ */
+function cancelBooking(id) {
+    if (confirm('Tem certeza que deseja cancelar este agendamento?')) {
+        bookings = bookings.filter(booking => booking.id !== id);
+        saveBookings();
+        renderBookings();
+        showModal('🗑️', 'Agendamento cancelado com sucesso!');
+    }
+}
+
+/**
+ * Limpa todos os agendamentos
+ */
+function clearAllBookings() {
+    if (confirm('⚠️ ATENÇÃO: Tem certeza que deseja apagar TODOS os agendamentos? Esta ação não pode ser desfeita!')) {
+        if (confirm('Esta é sua última chance. Deseja realmente apagar tudo?')) {
+            bookings = [];
+            saveBookings();
+            renderBookings();
+            showModal('🗑️', 'Todos os agendamentos foram removidos!');
+        }
+    }
+}
+
+// ============================================
+// RENDERIZAÇÃO E FILTROS
+// ============================================
+
+/**
+ * Renderiza a lista de agendamentos com filtros aplicados
+ */
+function renderBookings() {
+    const searchName = document.getElementById('searchName').value.toLowerCase();
+    const filterDate = document.getElementById('filterDate').value;
+    
+    // Filtra agendamentos
+    let filteredBookings = bookings.filter(booking => {
+        const matchName = booking.personName.toLowerCase().includes(searchName);
+        const matchDate = !filterDate || booking.date === filterDate;
+        return matchName && matchDate;
+    });
+
+    // Ordena por data e horário
+    filteredBookings.sort((a, b) => {
+        if (a.date !== b.date) {
+            return a.date.localeCompare(b.date);
+        }
+        return timeToMinutes(a.startTime) - timeToMinutes(b.startTime);
+    });
+
+    // Atualiza contador
+    document.getElementById('bookingCounter').textContent = 
+        `${filteredBookings.length} agendamento(s)`;
+
+    // Renderiza tabela
+    const tbody = document.getElementById('bookingsBody');
+    const emptyState = document.getElementById('emptyState');
+
+    if (filteredBookings.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.add('show');
+    } else {
+        emptyState.classList.remove('show');
+        tbody.innerHTML = filteredBookings.map(booking => `
+            <tr>
+                <td>${formatDate(booking.date)}</td>
+                <td>${booking.startTime}</td>
+                <td>${booking.endTime}</td>
+                <td>${booking.personName}</td>
+                <td>
+                    <span class="status-badge status-occupied">
+                        ${booking.status}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-danger btn-small" onclick="cancelBooking('${booking.id}')">
+                        ❌ Cancelar
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+}
+
+// ============================================
+// EXPORTAÇÃO E IMPRESSÃO
+// ============================================
+
+/**
+ * Exporta agendamentos para CSV
+ */
+function exportToCSV() {
+    if (bookings.length === 0) {
+        showModal('⚠️', 'Não há agendamentos para exportar!');
+        return;
+    }
+
+    // Cabeçalho do CSV
+    let csv = 'Data,Hora Início,Hora Término,Nome,Status\n';
+    
+    // Adiciona dados
+    bookings.forEach(booking => {
+        csv += `${formatDate(booking.date)},${booking.startTime},${booking.endTime},"${booking.personName}",${booking.status}\n`;
+    });
+
+    // Cria e baixa o arquivo
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `agendamentos_sala_video_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showModal('✅', 'Arquivo CSV exportado com sucesso!');
+}
+
+/**
+ * Imprime a agenda do dia
+ */
+function printSchedule() {
+    window.print();
+}
+
+// ============================================
+// MODAL DE MENSAGENS
+// ============================================
+
+/**
+ * Exibe modal com mensagem
+ */
+function showModal(icon, message) {
+    const overlay = document.getElementById('modalOverlay');
+    const modalIcon = document.getElementById('modalIcon');
+    const modalMessage = document.getElementById('modalMessage');
+
+    modalIcon.textContent = icon;
+    modalMessage.textContent = message;
+    overlay.classList.add('show');
+}
+
+/**
+ * Fecha o modal
+ */
+function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('show');
+}
+
+// ============================================
+// EVENT LISTENERS
+// ============================================
+
+/**
+ * Anexa todos os event listeners
+ */
+function attachEventListeners() {
+    // Formulário de agendamento
+    document.getElementById('bookingForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const personName = document.getElementById('personName').value;
+        const date = document.getElementById('bookingDate').value;
+        const startTime = document.getElementById('startTime').value;
+        const endTime = document.getElementById('endTime').value;
+
+        const validation = validateForm(personName, date, startTime, endTime);
+
+        if (validation.valid) {
+            addBooking(personName, date, startTime, endTime);
+            e.target.reset();
+            setDefaultDate();
+        } else {
+            showModal('⚠️', validation.message);
+        }
+    });
+
+    // Filtros
+    document.getElementById('searchName').addEventListener('input', renderBookings);
+    document.getElementById('filterDate').addEventListener('change', renderBookings);
+
+    // Botão Hoje
+    document.getElementById('btnToday').addEventListener('click', () => {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('filterDate').value = today;
+        renderBookings();
+    });
+
+    // Botão Limpar Filtros
+    document.getElementById('btnClearFilters').addEventListener('click', () => {
+        document.getElementById('searchName').value = '';
+        document.getElementById('filterDate').value = '';
+        renderBookings();
+    });
+
+    // Botão Exportar CSV
+    document.getElementById('btnExportCSV').addEventListener('click', exportToCSV);
+
+    // Botão Imprimir
+    document.getElementById('btnPrint').addEventListener('click', printSchedule);
+
+    // Botão Limpar Tudo
+    document.getElementById('btnClearAll').addEventListener('click', clearAllBookings);
+
+    // Fechar modal
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    document.getElementById('modalOverlay').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) {
+            closeModal();
+        }
+    });
+}
