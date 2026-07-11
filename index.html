@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Agendamento - Sala de Vídeo | EEGWG</title>
   
   <!-- Firebase SDK -->
@@ -20,7 +20,7 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
-      padding: 20px;
+      padding: 10px;
     }
 
     .container {
@@ -32,7 +32,7 @@
       overflow: hidden;
     }
 
-    /* Cabeçalho com Logo */
+    /* ===== CABEÇALHO ===== */
     header {
       background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
       color: white;
@@ -55,8 +55,8 @@
       max-height: 100px;
       width: auto;
       border-radius: 8px;
-      background: white;
-      padding: 10px;
+      background: transparent;
+      padding: 0;
     }
 
     .header-text h1 {
@@ -81,7 +81,7 @@
       padding: 30px;
     }
 
-    /* Seção de Filtros */
+    /* ===== FILTROS ===== */
     .filter-section {
       background: #f8f9fa;
       padding: 25px;
@@ -105,6 +105,7 @@
       gap: 20px;
     }
 
+    /* ===== FORMULÁRIOS ===== */
     .form-group {
       margin-bottom: 0;
     }
@@ -134,7 +135,7 @@
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 
-    /* Seção de Agendamento */
+    /* ===== SEÇÕES ===== */
     .booking-section {
       margin-bottom: 40px;
     }
@@ -157,6 +158,7 @@
       margin-bottom: 20px;
     }
 
+    /* ===== BOTÕES ===== */
     .btn {
       padding: 12px 30px;
       border: none;
@@ -165,6 +167,7 @@
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s;
+      width: 100%;
     }
 
     .btn-primary {
@@ -196,28 +199,31 @@
     }
 
     .btn-small {
-      padding: 8px 16px;
-      font-size: 0.875rem;
+      padding: 10px 16px;
+      font-size: 0.95rem;
     }
 
-    /* Tabela */
+    /* ===== TABELA ===== */
     .table-container {
       overflow-x: auto;
       margin-top: 20px;
       border-radius: 8px;
       border: 1px solid #ddd;
+      -webkit-overflow-scrolling: touch;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       background: white;
+      min-width: 600px;
     }
 
     th, td {
       padding: 15px;
       text-align: left;
       border-bottom: 1px solid #ddd;
+      white-space: nowrap;
     }
 
     th {
@@ -256,7 +262,7 @@
       color: #6b7280;
     }
 
-    /* Modal */
+    /* ===== MODAL ===== */
     .modal {
       display: none;
       position: fixed;
@@ -268,27 +274,23 @@
       justify-content: center;
       align-items: center;
       z-index: 1000;
+      padding: 20px;
     }
 
     .modal-content {
       background-color: white;
-      padding: 2.5rem;
+      padding: 2rem;
       border-radius: 12px;
       text-align: center;
       max-width: 400px;
+      width: 100%;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
       animation: slideIn 0.3s ease-out;
     }
 
     @keyframes slideIn {
-      from {
-        transform: translateY(-50px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
 
     .modal-icon {
@@ -317,25 +319,13 @@
 
     .modal-close:hover {
       background-color: #0056b3;
-      transform: translateY(-2px);
     }
 
-    .empty-state {
-      text-align: center;
-      padding: 3rem;
-      color: #666;
-    }
-
-    .empty-state-icon {
-      font-size: 4rem;
-      margin-bottom: 1rem;
-      opacity: 0.5;
-    }
-
+    /* ===== ESTATÍSTICAS ===== */
     .stats {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
       margin-bottom: 30px;
     }
 
@@ -358,10 +348,30 @@
       opacity: 0.9;
     }
 
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #666;
+    }
+
+    /* ============================================ */
+    /*  RESPONSIVIDADE - MOBILE */
+    /* ============================================ */
+
+    /* Tablets (até 768px) */
     @media (max-width: 768px) {
+      body {
+        padding: 5px;
+      }
+
+      .container {
+        border-radius: 8px;
+      }
+
       header {
         flex-direction: column;
-        padding: 20px;
+        padding: 20px 15px;
+        gap: 15px;
       }
 
       .logo {
@@ -369,27 +379,181 @@
       }
 
       .header-text h1 {
-        font-size: 1.4rem;
+        font-size: 1.3rem;
       }
 
       .header-text h2 {
         font-size: 1rem;
       }
 
+      .header-text p {
+        font-size: 0.85rem;
+      }
+
       .content {
-        padding: 20px;
+        padding: 15px;
+      }
+
+      .filter-section {
+        padding: 15px;
+      }
+
+      .filter-title {
+        font-size: 1.1rem;
+      }
+
+      .filter-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+
+      .section-title {
+        font-size: 1.2rem;
       }
 
       .form-row {
         grid-template-columns: 1fr;
+        gap: 15px;
       }
 
-      table {
-        font-size: 0.875rem;
+      .stats {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .stat-card {
+        padding: 15px;
+      }
+
+      .stat-number {
+        font-size: 2rem;
+      }
+
+      .stat-label {
+        font-size: 0.85rem;
       }
 
       th, td {
+        padding: 10px 8px;
+        font-size: 0.85rem;
+      }
+
+      .btn {
+        padding: 12px 20px;
+        font-size: 0.95rem;
+      }
+    }
+
+    /* Celulares pequenos (até 480px) */
+    @media (max-width: 480px) {
+      body {
+        padding: 0;
+      }
+
+      .container {
+        border-radius: 0;
+        margin: 0;
+      }
+
+      header {
+        padding: 15px 10px;
+      }
+
+      .logo {
+        max-height: 70px;
+      }
+
+      .header-text h1 {
+        font-size: 1.1rem;
+        line-height: 1.3;
+      }
+
+      .header-text h2 {
+        font-size: 0.9rem;
+      }
+
+      .content {
         padding: 10px;
+      }
+
+      .filter-section {
+        padding: 12px;
+        margin-bottom: 20px;
+      }
+
+      .form-group input,
+      .form-group select {
+        padding: 14px;
+        font-size: 16px;
+      }
+
+      .section-title {
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+      }
+
+      .booking-section {
+        margin-bottom: 25px;
+      }
+
+      .stat-number {
+        font-size: 1.8rem;
+      }
+
+      .stat-label {
+        font-size: 0.8rem;
+      }
+
+      .modal-content {
+        padding: 1.5rem;
+        margin: 10px;
+      }
+
+      .modal-icon {
+        font-size: 3rem;
+      }
+
+      .modal-message {
+        font-size: 1rem;
+      }
+
+      th, td {
+        padding: 8px 6px;
+        font-size: 0.8rem;
+      }
+    }
+
+    /* Landscape em celulares */
+    @media (max-height: 500px) and (orientation: landscape) {
+      header {
+        padding: 10px;
+      }
+
+      .logo {
+        max-height: 60px;
+      }
+
+      .header-text h1 {
+        font-size: 1rem;
+      }
+
+      .header-text h2 {
+        font-size: 0.85rem;
+      }
+    }
+
+    /* Melhoria para toque em telas touch */
+    @media (hover: none) and (pointer: coarse) {
+      .btn {
+        min-height: 44px;
+      }
+
+      .btn-danger {
+        min-height: 44px;
+      }
+
+      input, select {
+        min-height: 44px;
       }
     }
   </style>
@@ -430,11 +594,11 @@
         <h2 class="filter-title">🔍 Filtrar Agendamentos</h2>
         <div class="filter-grid">
           <div class="form-group">
-            <label for="filterDate">📅 Data:</label>
+            <label for="filterDate"> Data:</label>
             <input type="date" id="filterDate">
           </div>
           <div class="form-group">
-            <label for="filterProfessor">👨‍🏫 Professor:</label>
+            <label for="filterProfessor">👨‍ Professor:</label>
             <input type="text" id="filterProfessor" placeholder="Digite o nome do professor">
           </div>
           <div class="form-group" style="display: flex; align-items: flex-end;">
@@ -456,7 +620,7 @@
         <form id="bookingForm">
           <div class="form-row">
             <div class="form-group">
-              <label for="personName">‍🏫 Nome do Professor *</label>
+              <label for="personName">👨‍🏫 Nome do Professor *</label>
               <input type="text" id="personName" placeholder="Digite seu nome completo" required>
             </div>
             
@@ -620,7 +784,7 @@
       if (confirm('Tem certeza que deseja cancelar este agendamento?')) {
         try {
           await db.collection(COLLECTION_NAME).doc(id).delete();
-          showModal('🗑️', 'Agendamento cancelado com sucesso!');
+          showModal('️', 'Agendamento cancelado com sucesso!');
         } catch (error) {
           console.error('❌ Erro ao cancelar:', error);
           showModal('❌', 'Erro ao cancelar agendamento.');
@@ -732,7 +896,7 @@
         const row = document.createElement('tr');
         row.innerHTML = `
           <td colspan="5" style="text-align: center; padding: 3rem; color: #666;">
-            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📋</div>
+            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></div>
             <div>Nenhum agendamento encontrado</div>
           </td>
         `;
