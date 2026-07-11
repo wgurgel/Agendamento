@@ -447,8 +447,8 @@
             <h3 class="section-title">📝 Novo Agendamento</h3>
             <form id="bookingForm" class="booking-form">
                 <div class="form-group">
-                    <label for="personName">Nome da Pessoa:</label>
-                    <input type="text" id="personName" placeholder="Digite o nome completo" required>
+                    <label for="personName">Nome do Professor (a):</label>
+                    <input type="text" id="personName" placeholder="Digite o nome do professor (a)" required>
                 </div>
 
                 <div class="form-group">
@@ -476,8 +476,8 @@
             <h3 class="section-title">🔍 Filtros e Ações</h3>
             <div class="filters-row">
                 <div class="form-group">
-                    <label for="searchName">Pesquisar por nome:</label>
-                    <input type="text" id="searchName" placeholder="Digite o nome...">
+                    <label for="searchName">Pesquisar por professor(a):</label>
+                    <input type="text" id="searchName" placeholder="Digite o nome do professor(a)...">
                 </div>
 
                 <div class="form-group">
@@ -508,7 +508,7 @@
                             <th>Data</th>
                             <th>Horário Início</th>
                             <th>Horário Término</th>
-                            <th>Nome</th>
+                            <th>Professor(a)</th>
                             <th>Status</th>
                             <th>Ações</th>
                         </tr>
@@ -597,7 +597,7 @@
         }
 
         function validateForm(personName, date, startTime, endTime) {
-            if (!personName.trim()) return { valid: false, message: 'Preencha o nome da pessoa.' };
+            if (!personName.trim()) return { valid: false, message: 'Preencha o nome do professor(a).' };
             if (!date) return { valid: false, message: 'Selecione uma data.' };
             if (!startTime || !endTime) return { valid: false, message: 'Preencha os horários.' };
             if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
@@ -685,7 +685,7 @@
                 showModal('⚠️', 'Não há agendamentos para exportar!');
                 return;
             }
-            let csv = 'Data,Hora Início,Hora Término,Nome,Status\n';
+            let csv = 'Data,Hora Início,Hora Término,Professor(a),Status\n';
             bookings.forEach(b => {
                 csv += `${formatDate(b.date)},${b.startTime},${b.endTime},"${b.personName}",${b.status}\n`;
             });
