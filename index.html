@@ -82,53 +82,21 @@
     }
 
     /* ============================================ */
-    /* 📊 ESTATÍSTICAS - MENU COMPACTO */
+    /* 📊 ESTATÍSTICAS - 3 VERSÕES DISTINTAS */
     /* ============================================ */
-    .stats-container {
-      margin-bottom: 25px;
-    }
-
-    .stats-toggle {
-      display: none;
-      width: 100%;
-      padding: 12px 20px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .stats-toggle:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-    }
-
-    .stats-toggle-icon {
-      transition: transform 0.3s;
-      font-size: 1.2rem;
-    }
-
-    .stats-toggle.active .stats-toggle-icon {
-      transform: rotate(180deg);
-    }
-
-    .stats-content {
+    
+    /* Versão Desktop: Cards grandes */
+    .stats-desktop {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 15px;
-      transition: all 0.3s ease;
+      margin-bottom: 25px;
     }
 
     .stat-card {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      padding: 15px;
+      padding: 20px;
       border-radius: 8px;
       text-align: center;
       transition: transform 0.3s;
@@ -146,20 +114,20 @@
     }
 
     .stat-number {
-      font-size: 1.8rem;
+      font-size: 2.5rem;
       font-weight: bold;
-      margin-bottom: 3px;
+      margin-bottom: 5px;
       line-height: 1;
     }
 
     .stat-label {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       opacity: 0.9;
       line-height: 1.2;
     }
 
-    /* Versão horizontal compacta (menu) */
-    .stats-horizontal {
+    /* Versão Tablet: Menu horizontal compacto */
+    .stats-tablet {
       display: none;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       border-radius: 8px;
@@ -167,7 +135,7 @@
       margin-bottom: 20px;
     }
 
-    .stats-horizontal-grid {
+    .stats-tablet-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
@@ -179,7 +147,6 @@
       padding: 8px 5px;
       border-radius: 6px;
       background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(5px);
     }
 
     .stat-mini-number {
@@ -194,6 +161,70 @@
       opacity: 0.9;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+    }
+
+    /* Versão Mobile: Botão colapsável */
+    .stats-mobile-toggle {
+      display: none;
+      width: 100%;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .stats-mobile-toggle:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .stats-toggle-icon {
+      transition: transform 0.3s;
+      font-size: 1.2rem;
+    }
+
+    .stats-mobile-toggle.active .stats-toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .stats-mobile-content {
+      display: none;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .stats-mobile-content.expanded {
+      display: grid;
+    }
+
+    .stats-mobile-content .stat-card {
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      text-align: left;
+    }
+
+    .stats-mobile-content .stat-icon {
+      font-size: 2rem;
+      margin-bottom: 0;
+    }
+
+    .stats-mobile-content .stat-number {
+      font-size: 1.5rem;
+    }
+
+    .stats-mobile-content .stat-label {
+      font-size: 0.8rem;
     }
 
     /* ===== FILTROS ===== */
@@ -482,12 +513,12 @@
         padding: 15px;
       }
 
-      /* Esconde cards grandes e mostra versão horizontal compacta */
-      .stats-content {
+      /* Esconde versão Desktop e mostra versão Tablet */
+      .stats-desktop {
         display: none;
       }
 
-      .stats-horizontal {
+      .stats-tablet {
         display: block;
       }
 
@@ -524,7 +555,7 @@
       }
     }
 
-    /* Celulares pequenos (até 480px) - Menu colapsável */
+    /* Celulares pequenos (até 480px) */
     @media (max-width: 480px) {
       body {
         padding: 0;
@@ -556,45 +587,13 @@
         padding: 10px;
       }
 
-      /* Mostra botão toggle e esconde menu horizontal */
-      .stats-toggle {
-        display: flex;
-      }
-
-      .stats-horizontal {
+      /* Esconde versão Tablet e mostra versão Mobile */
+      .stats-tablet {
         display: none;
       }
 
-      .stats-content {
-        display: none;
-        grid-template-columns: 1fr;
-        gap: 10px;
-        margin-top: 10px;
-      }
-
-      .stats-content.expanded {
-        display: grid;
-      }
-
-      .stat-card {
-        padding: 12px;
+      .stats-mobile-toggle {
         display: flex;
-        align-items: center;
-        gap: 15px;
-        text-align: left;
-      }
-
-      .stat-icon {
-        font-size: 2rem;
-        margin-bottom: 0;
-      }
-
-      .stat-number {
-        font-size: 1.5rem;
-      }
-
-      .stat-label {
-        font-size: 0.8rem;
       }
 
       .filter-section {
@@ -669,7 +668,7 @@
         min-height: 44px;
       }
 
-      .stats-toggle {
+      .stats-mobile-toggle {
         min-height: 44px;
       }
     }
@@ -691,72 +690,71 @@
 
     <div class="content">
       <!-- ============================================ -->
-      <!-- 📊 ESTATÍSTICAS - 3 VERSÕES PARA DIFERENTES TELAS -->
+      <!-- 📊 ESTATÍSTICAS - 3 VERSÕES DISTINTAS -->
       <!-- ============================================ -->
-      <div class="stats-container">
-        <!-- Versão Desktop: Cards normais -->
-        <div class="stats-content" id="statsContent">
-          <div class="stat-card">
-            <div class="stat-icon">📊</div>
-            <div class="stat-number" id="totalBookings">0</div>
+      
+      <!-- Versão Desktop: Cards grandes -->
+      <div class="stats-desktop">
+        <div class="stat-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-number" id="totalBookings">0</div>
+          <div class="stat-label">Total de Agendamentos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📅</div>
+          <div class="stat-number" id="todayBookings">0</div>
+          <div class="stat-label">Agendamentos Hoje</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📆</div>
+          <div class="stat-number" id="weekBookings">0</div>
+          <div class="stat-label">Esta Semana</div>
+        </div>
+      </div>
+
+      <!-- Versão Tablet: Menu horizontal compacto -->
+      <div class="stats-tablet">
+        <div class="stats-tablet-grid">
+          <div class="stat-mini">
+            <div class="stat-mini-number" id="totalBookingsTablet">0</div>
+            <div class="stat-mini-label">Total</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-number" id="todayBookingsTablet">0</div>
+            <div class="stat-mini-label">Hoje</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-number" id="weekBookingsTablet">0</div>
+            <div class="stat-mini-label">Semana</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Versão Mobile: Botão colapsável -->
+      <button class="stats-mobile-toggle" id="statsToggle" onclick="toggleStats()">
+        <span>📊 Ver Estatísticas</span>
+        <span class="stats-toggle-icon">▼</span>
+      </button>
+      <div class="stats-mobile-content" id="statsMobileContent">
+        <div class="stat-card">
+          <div class="stat-icon">📊</div>
+          <div>
+            <div class="stat-number" id="totalBookingsMobile">0</div>
             <div class="stat-label">Total de Agendamentos</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-icon">📅</div>
-            <div class="stat-number" id="todayBookings">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📅</div>
+          <div>
+            <div class="stat-number" id="todayBookingsMobile">0</div>
             <div class="stat-label">Agendamentos Hoje</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-icon">📆</div>
-            <div class="stat-number" id="weekBookings">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📆</div>
+          <div>
+            <div class="stat-number" id="weekBookingsMobile">0</div>
             <div class="stat-label">Esta Semana</div>
-          </div>
-        </div>
-
-        <!-- Versão Tablet: Menu horizontal compacto -->
-        <div class="stats-horizontal">
-          <div class="stats-horizontal-grid">
-            <div class="stat-mini">
-              <div class="stat-mini-number" id="totalBookingsMini">0</div>
-              <div class="stat-mini-label">Total</div>
-            </div>
-            <div class="stat-mini">
-              <div class="stat-mini-number" id="todayBookingsMini">0</div>
-              <div class="stat-mini-label">Hoje</div>
-            </div>
-            <div class="stat-mini">
-              <div class="stat-mini-number" id="weekBookingsMini">0</div>
-              <div class="stat-mini-label">Semana</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Versão Celular: Botão colapsável -->
-        <button class="stats-toggle" id="statsToggle" onclick="toggleStats()">
-          <span>📊 Ver Estatísticas</span>
-          <span class="stats-toggle-icon">▼</span>
-        </button>
-        <div class="stats-content" id="statsContentMobile">
-          <div class="stat-card">
-            <div class="stat-icon">📊</div>
-            <div>
-              <div class="stat-number" id="totalBookingsMobile">0</div>
-              <div class="stat-label">Total de Agendamentos</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">📅</div>
-            <div>
-              <div class="stat-number" id="todayBookingsMobile">0</div>
-              <div class="stat-label">Agendamentos Hoje</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">📆</div>
-            <div>
-              <div class="stat-number" id="weekBookingsMobile">0</div>
-              <div class="stat-label">Esta Semana</div>
-            </div>
           </div>
         </div>
       </div>
@@ -1145,12 +1143,12 @@
       updateElement('todayBookings', todayCount);
       updateElement('weekBookings', weekCount);
 
-      // Atualiza versão Tablet (horizontal)
-      updateElement('totalBookingsMini', total);
-      updateElement('todayBookingsMini', todayCount);
-      updateElement('weekBookingsMini', weekCount);
+      // Atualiza versão Tablet
+      updateElement('totalBookingsTablet', total);
+      updateElement('todayBookingsTablet', todayCount);
+      updateElement('weekBookingsTablet', weekCount);
 
-      // Atualiza versão Mobile (colapsável)
+      // Atualiza versão Mobile
       updateElement('totalBookingsMobile', total);
       updateElement('todayBookingsMobile', todayCount);
       updateElement('weekBookingsMobile', weekCount);
@@ -1181,7 +1179,7 @@
     // ============================================
     function toggleStats() {
       const toggleBtn = document.getElementById('statsToggle');
-      const mobileContent = document.getElementById('statsContentMobile');
+      const mobileContent = document.getElementById('statsMobileContent');
       
       toggleBtn.classList.toggle('active');
       mobileContent.classList.toggle('expanded');
