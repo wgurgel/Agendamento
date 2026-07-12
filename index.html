@@ -8,7 +8,6 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   
   <!-- html2pdf.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -47,6 +46,7 @@
       justify-content: center;
       gap: 20px;
       flex-wrap: wrap;
+      position: relative;
     }
 
     .logo-container {
@@ -136,10 +136,6 @@
 
     .btn-login-header:hover {
       background: rgba(255,255,255,0.3);
-    }
-
-    header {
-      position: relative;
     }
 
     .content {
@@ -412,15 +408,6 @@
       background: #c82333;
     }
 
-    .btn-success {
-      background: #28a745;
-      color: white;
-    }
-
-    .btn-success:hover {
-      background: #218838;
-    }
-
     .btn-small {
       padding: 10px 16px;
       font-size: 0.95rem;
@@ -690,7 +677,7 @@
   <div class="container">
     <header>
       <button class="btn-login-header" id="btnLoginHeader" onclick="openLoginModal()">
-        🔐 Login Admin
+         Login Admin
       </button>
       <div class="logo-container">
         <img src="Logo EEGWG(2).png" alt="Logo EEGWG" class="logo">
@@ -722,7 +709,7 @@
           <div class="stat-label">Agendamentos Hoje</div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon"></div>
+          <div class="stat-icon">📆</div>
           <div class="stat-number" id="weekBookings">0</div>
           <div class="stat-label">Esta Semana</div>
         </div>
@@ -758,7 +745,7 @@
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon"></div>
+          <div class="stat-icon">📅</div>
           <div>
             <div class="stat-number" id="todayBookingsMobile">0</div>
             <div class="stat-label">Agendamentos Hoje</div>
@@ -832,10 +819,10 @@
           📅 Agendamentos Realizados
           <div class="section-actions">
             <button onclick="generatePDF()" class="btn btn-pdf" id="btnPdf">
-               Gerar PDF
+              📄 Gerar PDF
             </button>
             <button id="clearAllBtn" class="btn btn-danger btn-small" style="display: none;">
-              ️ Limpar Todos
+              🗑️ Limpar Todos
             </button>
           </div>
         </h2>
@@ -844,9 +831,9 @@
           <table id="bookingsTable">
             <thead>
               <tr>
-                <th> Data</th>
-                <th> Horário</th>
-                <th>‍🏫 Professor (a)</th>
+                <th>📅 Data</th>
+                <th>⏰ Horário</th>
+                <th>👨‍🏫 Professor (a)</th>
                 <th>📊 Status</th>
                 <th>🔧 Ações</th>
               </tr>
@@ -866,15 +853,11 @@
       <h3>🔐 Login de Administrador</h3>
       <form id="loginForm" onsubmit="handleLogin(event)">
         <div class="form-group">
-          <label for="loginEmail">Email:</label>
-          <input type="email" id="loginEmail" placeholder="admin@eegwg.com" required>
-        </div>
-        <div class="form-group">
-          <label for="loginPassword">Senha:</label>
+          <label for="loginPassword">Senha de Administrador:</label>
           <input type="password" id="loginPassword" placeholder="Digite a senha" required>
         </div>
         <div class="login-error" id="loginError">
-          Email ou senha incorretos!
+          Senha incorreta!
         </div>
         <button type="submit" class="btn btn-primary">Entrar</button>
         <button type="button" class="btn btn-secondary" onclick="closeLoginModal()" style="margin-top: 10px;">
@@ -882,7 +865,7 @@
         </button>
       </form>
       <div class="login-hint">
-         Acesso restrito à coordenação e direção
+        🔒 Acesso restrito à coordenação e direção
       </div>
     </div>
   </div>
@@ -914,20 +897,13 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const auth = firebase.auth();
     const COLLECTION_NAME = 'agendamentos';
 
     // ============================================
-    // LISTA DE EMAILS AUTORIZADOS COMO ADMIN
+    // SENHA DO ADMINISTRADOR
     // ============================================
-    // Adicione aqui os emails dos 3 a 5 administradores
-    const ADMIN_EMAILS = [
-      'isma.fernandes@gmail.com',
-      'isma.fernandes@eegwg.com',
-      'secretaria@eegwg.com',
-      'admin@eegwg.com',
-      'supervisor@eegwg.com'
-    ];
+    // Altere esta senha para a que você quiser usar
+    const ADMIN_PASSWORD = 'eegwg2026';
 
     // ============================================
     // VARIÁVEIS GLOBAIS
@@ -935,7 +911,6 @@
     let bookings = [];
     let filteredBookings = [];
     let isAdmin = false;
-    let currentAdminEmail = null;
 
     // ============================================
     // INICIALIZAÇÃO
@@ -952,6 +927,11 @@
       if (bookingForm) {
         bookingForm.addEventListener('submit', handleBookingSubmit);
       }
+
+      const clearBtn = document.getElementById('clearAllBtn');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', clearAllBookings);
+      }
     }
 
     function setDefaultDate() {
@@ -964,13 +944,12 @@
     }
 
     // ============================================
-    // SISTEMA DE LOGIN
+    // SISTEMA DE LOGIN (SIMPLIFICADO)
     // ============================================
     function checkAdminSession() {
-      const savedEmail = localStorage.getItem('adminEmail');
-      if (savedEmail && ADMIN_EMAILS.includes(savedEmail)) {
+      const isLogged = localStorage.getItem('adminLogged');
+      if (isLogged === 'true') {
         isAdmin = true;
-        currentAdminEmail = savedEmail;
         updateAdminUI();
       }
     }
@@ -985,46 +964,32 @@
       document.getElementById('loginModal').style.display = 'none';
     }
 
-    async function handleLogin(event) {
+    function handleLogin(event) {
       event.preventDefault();
       
-      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
       const password = document.getElementById('loginPassword').value;
       const errorDiv = document.getElementById('loginError');
 
-      // Verifica se o email está na lista de admins
-      if (!ADMIN_EMAILS.includes(email)) {
-        errorDiv.textContent = 'Email não autorizado!';
+      // Verifica a senha
+      if (password !== ADMIN_PASSWORD) {
+        errorDiv.textContent = 'Senha incorreta!';
         errorDiv.classList.add('show');
         return;
       }
 
-      try {
-        // Tenta fazer login com Firebase Auth
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        
-        // Login bem-sucedido
-        isAdmin = true;
-        currentAdminEmail = email;
-        localStorage.setItem('adminEmail', email);
-        
-        updateAdminUI();
-        closeLoginModal();
-        showModal('✅', 'Login realizado com sucesso!');
-        
-      } catch (error) {
-        console.error('Erro no login:', error);
-        errorDiv.textContent = 'Email ou senha incorretos!';
-        errorDiv.classList.add('show');
-      }
+      // Login bem-sucedido
+      isAdmin = true;
+      localStorage.setItem('adminLogged', 'true');
+      
+      updateAdminUI();
+      closeLoginModal();
+      showModal('✅', 'Login realizado com sucesso!');
     }
 
     function logoutAdmin() {
       if (confirm('Deseja realmente sair do modo administrador?')) {
         isAdmin = false;
-        currentAdminEmail = null;
-        localStorage.removeItem('adminEmail');
-        auth.signOut();
+        localStorage.removeItem('adminLogged');
         updateAdminUI();
         showModal('👋', 'Logout realizado com sucesso!');
       }
@@ -1069,7 +1034,7 @@
           console.log('✅ Agendamentos carregados:', bookings.length);
         }, (error) => {
           console.error('❌ Erro ao carregar:', error);
-          showModal('', 'Erro ao carregar agendamentos.');
+          showModal('❌', 'Erro ao carregar agendamentos.');
         });
     }
 
@@ -1116,7 +1081,7 @@
     async function clearAllBookings() {
       // Só admin pode limpar tudo
       if (!isAdmin) {
-        showModal('️', 'Apenas administradores podem limpar todos os agendamentos!');
+        showModal('⚠️', 'Apenas administradores podem limpar todos os agendamentos!');
         return;
       }
 
@@ -1184,7 +1149,7 @@
       }
 
       if (hasTimeConflict(date, startTime, endTime)) {
-        showModal('️', 'Já existe um agendamento neste horário!');
+        showModal('⚠️', 'Já existe um agendamento neste horário!');
         return;
       }
 
