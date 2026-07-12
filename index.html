@@ -677,7 +677,7 @@
   <div class="container">
     <header>
       <button class="btn-login-header" id="btnLoginHeader" onclick="openLoginModal()">
-         Login Admin
+        🔐 Login Admin
       </button>
       <div class="logo-container">
         <img src="Logo EEGWG(2).png" alt="Logo EEGWG" class="logo">
@@ -738,7 +738,7 @@
       </button>
       <div class="stats-mobile-content" id="statsMobileContent">
         <div class="stat-card">
-          <div class="stat-icon">📊</div>
+          <div class="stat-icon"></div>
           <div>
             <div class="stat-number" id="totalBookingsMobile">0</div>
             <div class="stat-label">Total de Agendamentos</div>
@@ -765,11 +765,11 @@
         <h2 class="filter-title">🔍 Filtrar Agendamentos</h2>
         <div class="filter-grid">
           <div class="form-group">
-            <label for="filterDate">📅 Data:</label>
+            <label for="filterDate"> Data:</label>
             <input type="date" id="filterDate">
           </div>
           <div class="form-group">
-            <label for="filterProfessor">👨‍🏫 Professor (a):</label>
+            <label for="filterProfessor">👨‍ Professor (a):</label>
             <input type="text" id="filterProfessor" placeholder="Digite o nome do professor (a)">
           </div>
           <div class="form-group" style="display: flex; align-items: flex-end;">
@@ -791,7 +791,7 @@
         <form id="bookingForm">
           <div class="form-row">
             <div class="form-group">
-              <label for="personName">👨‍🏫 Nome do Professor (a) *</label>
+              <label for="personName">‍🏫 Nome do Professor (a) *</label>
               <input type="text" id="personName" placeholder="Digite seu nome completo" required>
             </div>
             <div class="form-group">
@@ -834,8 +834,8 @@
                 <th>📅 Data</th>
                 <th>⏰ Horário</th>
                 <th>👨‍🏫 Professor (a)</th>
-                <th>📊 Status</th>
-                <th>🔧 Ações</th>
+                <th> Status</th>
+                <th> Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -902,7 +902,6 @@
     // ============================================
     // SENHA DO ADMINISTRADOR
     // ============================================
-    // Altere esta senha para a que você quiser usar
     const ADMIN_PASSWORD = 'eegwg2026';
 
     // ============================================
@@ -922,6 +921,9 @@
       checkAdminSession();
     });
 
+    // ============================================
+    // SETUP DE EVENTOS (COM MEMORIZAÇÃO DE NOME)
+    // ============================================
     function setupEventListeners() {
       const bookingForm = document.getElementById('bookingForm');
       if (bookingForm) {
@@ -931,6 +933,21 @@
       const clearBtn = document.getElementById('clearAllBtn');
       if (clearBtn) {
         clearBtn.addEventListener('click', clearAllBookings);
+      }
+
+      // 🆕 NOVO: Salvar o nome do professor automaticamente
+      const personNameInput = document.getElementById('personName');
+      if (personNameInput) {
+        // Carrega o nome salvo quando a página abre
+        const savedName = localStorage.getItem('lastUsedName');
+        if (savedName) {
+          personNameInput.value = savedName;
+        }
+        
+        // Salva o nome sempre que o professor digitar
+        personNameInput.addEventListener('input', (e) => {
+          localStorage.setItem('lastUsedName', e.target.value.trim());
+        });
       }
     }
 
@@ -970,14 +987,12 @@
       const password = document.getElementById('loginPassword').value;
       const errorDiv = document.getElementById('loginError');
 
-      // Verifica a senha
       if (password !== ADMIN_PASSWORD) {
         errorDiv.textContent = 'Senha incorreta!';
         errorDiv.classList.add('show');
         return;
       }
 
-      // Login bem-sucedido
       isAdmin = true;
       localStorage.setItem('adminLogged', 'true');
       
@@ -1010,7 +1025,6 @@
         btnLoginHeader.style.display = 'block';
       }
 
-      // Re-renderiza a tabela para atualizar os botões de cancelar
       renderBookings();
     }
 
@@ -1058,10 +1072,9 @@
     }
 
     async function cancelBooking(id, personName) {
-      // Verifica se é admin ou se é o próprio professor
       if (!isAdmin) {
-        const currentPersonName = document.getElementById('personName').value.trim().toLowerCase();
-        if (currentPersonName !== personName.toLowerCase()) {
+        const currentPersonName = localStorage.getItem('lastUsedName') || document.getElementById('personName').value.trim();
+        if (currentPersonName.toLowerCase() !== personName.toLowerCase()) {
           showModal('⚠️', 'Você só pode cancelar seus próprios agendamentos!');
           return;
         }
@@ -1079,9 +1092,8 @@
     }
 
     async function clearAllBookings() {
-      // Só admin pode limpar tudo
       if (!isAdmin) {
-        showModal('⚠️', 'Apenas administradores podem limpar todos os agendamentos!');
+        showModal('️', 'Apenas administradores podem limpar todos os agendamentos!');
         return;
       }
 
@@ -1149,13 +1161,19 @@
       }
 
       if (hasTimeConflict(date, startTime, endTime)) {
-        showModal('⚠️', 'Já existe um agendamento neste horário!');
+        showModal('️', 'Já existe um agendamento neste horário!');
         return;
       }
 
       addBooking(personName, date, startTime, endTime);
       document.getElementById('bookingForm').reset();
       setDefaultDate();
+      
+      // 🆕 NOVO: Restaurar o nome do professor após o reset
+      const savedName = localStorage.getItem('lastUsedName');
+      if (savedName) {
+        document.getElementById('personName').value = savedName;
+      }
     }
 
     function hasTimeConflict(date, startTime, endTime) {
@@ -1215,11 +1233,9 @@
         year: 'numeric'
       });
 
-      // Determina se deve mostrar o botão de cancelar
       let cancelButton = '';
       
       if (isAdmin) {
-        // Admin pode cancelar qualquer agendamento
         cancelButton = `
           <button onclick="cancelBooking('${booking.id}', '${escapeHtml(booking.personName)}')" 
                   class="btn btn-danger btn-small" 
@@ -1228,8 +1244,8 @@
           </button>
         `;
       } else {
-        // Usuário comum: verifica se é o próprio agendamento
-        const currentPersonName = document.getElementById('personName').value.trim();
+        // 🆕 NOVO: Usa o nome salvo no localStorage para identificar o professor
+        const currentPersonName = localStorage.getItem('lastUsedName') || document.getElementById('personName').value.trim();
         if (currentPersonName && currentPersonName.toLowerCase() === booking.personName.toLowerCase()) {
           cancelButton = `
             <button onclick="cancelBooking('${booking.id}', '${escapeHtml(booking.personName)}')" 
@@ -1335,7 +1351,7 @@
 
       const btnPdf = document.getElementById('btnPdf');
       const originalText = btnPdf.innerHTML;
-      btnPdf.innerHTML = '⏳ Gerando...';
+      btnPdf.innerHTML = ' Gerando...';
       btnPdf.disabled = true;
 
       try {
@@ -1379,7 +1395,7 @@
             </div>
             
             <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-              <h3 style="color: #333; margin: 0 0 10px 0; font-size: 16px;">📊 Relatório de Agendamentos</h3>
+              <h3 style="color: #333; margin: 0 0 10px 0; font-size: 16px;"> Relatório de Agendamentos</h3>
               <p style="margin: 5px 0; font-size: 13px;"><strong>Data de geração:</strong> ${dataGeracao}</p>
               <p style="margin: 5px 0; font-size: 13px;"><strong>Total de registros:</strong> ${filteredBookings.length} agendamento(s)</p>
             </div>
