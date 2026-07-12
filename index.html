@@ -9,6 +9,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   
+  <!-- html2pdf.js para gerar PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
   <style>
     * {
       margin: 0;
@@ -81,11 +84,7 @@
       padding: 30px;
     }
 
-    /* ============================================ */
-    /* 📊 ESTATÍSTICAS - 3 VERSÕES DISTINTAS */
-    /* ============================================ */
-    
-    /* Versão Desktop: Cards grandes */
+    /* ===== ESTATÍSTICAS ===== */
     .stats-desktop {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -126,7 +125,6 @@
       line-height: 1.2;
     }
 
-    /* Versão Tablet: Menu horizontal compacto */
     .stats-tablet {
       display: none;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -163,7 +161,6 @@
       letter-spacing: 0.5px;
     }
 
-    /* Versão Mobile: Botão colapsável */
     .stats-mobile-toggle {
       display: none;
       width: 100%;
@@ -295,6 +292,14 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .section-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     .form-row {
@@ -313,12 +318,12 @@
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s;
-      width: 100%;
     }
 
     .btn-primary {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
+      width: 100%;
     }
 
     .btn-primary:hover {
@@ -329,6 +334,7 @@
     .btn-secondary {
       background: #6c757d;
       color: white;
+      width: 100%;
     }
 
     .btn-secondary:hover {
@@ -344,9 +350,40 @@
       background: #c82333;
     }
 
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #218838;
+    }
+
+    .btn-info {
+      background: #17a2b8;
+      color: white;
+    }
+
+    .btn-info:hover {
+      background: #138496;
+    }
+
     .btn-small {
       padding: 10px 16px;
       font-size: 0.95rem;
+    }
+
+    .btn-pdf {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      color: white;
+      padding: 10px 20px;
+      font-size: 0.95rem;
+      width: auto;
+    }
+
+    .btn-pdf:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
     }
 
     /* ===== TABELA ===== */
@@ -473,19 +510,18 @@
       color: #666;
     }
 
+    /* ===== ÁREA DE IMPRESSÃO (escondida na tela) ===== */
+    #printArea {
+      display: none;
+    }
+
     /* ============================================ */
-    /* 📱 RESPONSIVIDADE - MOBILE */
+    /* 📱 RESPONSIVIDADE */
     /* ============================================ */
 
-    /* Tablets (até 768px) */
     @media (max-width: 768px) {
-      body {
-        padding: 5px;
-      }
-
-      .container {
-        border-radius: 8px;
-      }
+      body { padding: 5px; }
+      .container { border-radius: 8px; }
 
       header {
         flex-direction: column;
@@ -493,190 +529,77 @@
         gap: 15px;
       }
 
-      .logo {
-        max-height: 80px;
+      .logo { max-height: 80px; }
+      .header-text h1 { font-size: 1.3rem; }
+      .header-text h2 { font-size: 1rem; }
+      .header-text p { font-size: 0.85rem; }
+      .content { padding: 15px; }
+
+      .stats-desktop { display: none; }
+      .stats-tablet { display: block; }
+
+      .filter-section { padding: 15px; }
+      .filter-title { font-size: 1.1rem; }
+      .filter-grid { grid-template-columns: 1fr; gap: 15px; }
+      .section-title { font-size: 1.2rem; }
+      .form-row { grid-template-columns: 1fr; gap: 15px; }
+
+      th, td { padding: 10px 8px; font-size: 0.85rem; }
+      .btn { padding: 12px 20px; font-size: 0.95rem; }
+
+      .section-actions {
+        margin-left: 0;
+        margin-top: 10px;
+        width: 100%;
       }
 
-      .header-text h1 {
-        font-size: 1.3rem;
-      }
-
-      .header-text h2 {
-        font-size: 1rem;
-      }
-
-      .header-text p {
-        font-size: 0.85rem;
-      }
-
-      .content {
-        padding: 15px;
-      }
-
-      /* Esconde versão Desktop e mostra versão Tablet */
-      .stats-desktop {
-        display: none;
-      }
-
-      .stats-tablet {
-        display: block;
-      }
-
-      .filter-section {
-        padding: 15px;
-      }
-
-      .filter-title {
-        font-size: 1.1rem;
-      }
-
-      .filter-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
-      }
-
-      .section-title {
-        font-size: 1.2rem;
-      }
-
-      .form-row {
-        grid-template-columns: 1fr;
-        gap: 15px;
-      }
-
-      th, td {
-        padding: 10px 8px;
-        font-size: 0.85rem;
-      }
-
-      .btn {
-        padding: 12px 20px;
-        font-size: 0.95rem;
+      .section-actions .btn {
+        flex: 1;
+        min-width: 140px;
       }
     }
 
-    /* Celulares pequenos (até 480px) */
     @media (max-width: 480px) {
-      body {
-        padding: 0;
-      }
+      body { padding: 0; }
+      .container { border-radius: 0; margin: 0; }
+      header { padding: 15px 10px; }
+      .logo { max-height: 70px; }
+      .header-text h1 { font-size: 1.1rem; line-height: 1.3; }
+      .header-text h2 { font-size: 0.9rem; }
+      .content { padding: 10px; }
 
-      .container {
-        border-radius: 0;
-        margin: 0;
-      }
+      .stats-tablet { display: none; }
+      .stats-mobile-toggle { display: flex; }
 
-      header {
-        padding: 15px 10px;
-      }
-
-      .logo {
-        max-height: 70px;
-      }
-
-      .header-text h1 {
-        font-size: 1.1rem;
-        line-height: 1.3;
-      }
-
-      .header-text h2 {
-        font-size: 0.9rem;
-      }
-
-      .content {
-        padding: 10px;
-      }
-
-      /* Esconde versão Tablet e mostra versão Mobile */
-      .stats-tablet {
-        display: none;
-      }
-
-      .stats-mobile-toggle {
-        display: flex;
-      }
-
-      .filter-section {
-        padding: 12px;
-        margin-bottom: 20px;
-      }
-
+      .filter-section { padding: 12px; margin-bottom: 20px; }
       .form-group input,
-      .form-group select {
-        padding: 14px;
-        font-size: 16px;
-      }
+      .form-group select { padding: 14px; font-size: 16px; }
+      .section-title { font-size: 1.1rem; margin-bottom: 15px; }
+      .booking-section { margin-bottom: 25px; }
 
-      .section-title {
-        font-size: 1.1rem;
-        margin-bottom: 15px;
-      }
+      .modal-content { padding: 1.5rem; margin: 10px; }
+      .modal-icon { font-size: 3rem; }
+      .modal-message { font-size: 1rem; }
 
-      .booking-section {
-        margin-bottom: 25px;
-      }
-
-      .modal-content {
-        padding: 1.5rem;
-        margin: 10px;
-      }
-
-      .modal-icon {
-        font-size: 3rem;
-      }
-
-      .modal-message {
-        font-size: 1rem;
-      }
-
-      th, td {
-        padding: 8px 6px;
-        font-size: 0.8rem;
-      }
+      th, td { padding: 8px 6px; font-size: 0.8rem; }
     }
 
-    /* Landscape em celulares */
     @media (max-height: 500px) and (orientation: landscape) {
-      header {
-        padding: 10px;
-      }
-
-      .logo {
-        max-height: 60px;
-      }
-
-      .header-text h1 {
-        font-size: 1rem;
-      }
-
-      .header-text h2 {
-        font-size: 0.85rem;
-      }
+      header { padding: 10px; }
+      .logo { max-height: 60px; }
+      .header-text h1 { font-size: 1rem; }
+      .header-text h2 { font-size: 0.85rem; }
     }
 
-    /* Melhoria para toque em telas touch */
     @media (hover: none) and (pointer: coarse) {
-      .btn {
-        min-height: 44px;
-      }
-
-      .btn-danger {
-        min-height: 44px;
-      }
-
-      input, select {
-        min-height: 44px;
-      }
-
-      .stats-mobile-toggle {
-        min-height: 44px;
-      }
+      .btn, .btn-danger, .btn-pdf { min-height: 44px; }
+      input, select { min-height: 44px; }
+      .stats-mobile-toggle { min-height: 44px; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Cabeçalho com Logo -->
     <header>
       <div class="logo-container">
         <img src="Logo EEGWG(2).png" alt="Logo EEGWG" class="logo">
@@ -689,14 +612,10 @@
     </header>
 
     <div class="content">
-      <!-- ============================================ -->
-      <!-- 📊 ESTATÍSTICAS - 3 VERSÕES DISTINTAS -->
-      <!-- ============================================ -->
-      
-      <!-- Versão Desktop: Cards grandes -->
+      <!-- ESTATÍSTICAS -->
       <div class="stats-desktop">
         <div class="stat-card">
-          <div class="stat-icon">📊</div>
+          <div class="stat-icon"></div>
           <div class="stat-number" id="totalBookings">0</div>
           <div class="stat-label">Total de Agendamentos</div>
         </div>
@@ -712,7 +631,6 @@
         </div>
       </div>
 
-      <!-- Versão Tablet: Menu horizontal compacto -->
       <div class="stats-tablet">
         <div class="stats-tablet-grid">
           <div class="stat-mini">
@@ -730,7 +648,6 @@
         </div>
       </div>
 
-      <!-- Versão Mobile: Botão colapsável -->
       <button class="stats-mobile-toggle" id="statsToggle" onclick="toggleStats()">
         <span>📊 Ver Estatísticas</span>
         <span class="stats-toggle-icon">▼</span>
@@ -751,7 +668,7 @@
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">📆</div>
+          <div class="stat-icon"></div>
           <div>
             <div class="stat-number" id="weekBookingsMobile">0</div>
             <div class="stat-label">Esta Semana</div>
@@ -759,7 +676,7 @@
         </div>
       </div>
 
-      <!-- Filtros -->
+      <!-- FILTROS -->
       <section class="filter-section">
         <h2 class="filter-title">🔍 Filtrar Agendamentos</h2>
         <div class="filter-grid">
@@ -768,8 +685,8 @@
             <input type="date" id="filterDate">
           </div>
           <div class="form-group">
-            <label for="filterProfessor">👨‍🏫 Professor:</label>
-            <input type="text" id="filterProfessor" placeholder="Digite o nome do professor">
+            <label for="filterProfessor">‍🏫 Professor (a):</label>
+            <input type="text" id="filterProfessor" placeholder="Digite o nome do professor (a)">
           </div>
           <div class="form-group" style="display: flex; align-items: flex-end;">
             <button onclick="applyFilters()" class="btn btn-primary" style="width: 100%;">
@@ -784,41 +701,47 @@
         </div>
       </section>
 
-      <!-- Novo Agendamento -->
+      <!-- NOVO AGENDAMENTO -->
       <section class="booking-section">
         <h2 class="section-title">📝 Novo Agendamento</h2>
         <form id="bookingForm">
           <div class="form-row">
             <div class="form-group">
-              <label for="personName">👨‍🏫 Nome do Professor *</label>
+              <label for="personName">👨‍ Nome do Professor (a) *</label>
               <input type="text" id="personName" placeholder="Digite seu nome completo" required>
             </div>
-            
             <div class="form-group">
               <label for="bookingDate">📅 Data do Agendamento *</label>
               <input type="date" id="bookingDate" required>
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label for="startTime">⏰ Hora de Início *</label>
               <input type="time" id="startTime" required>
             </div>
-
             <div class="form-group">
-              <label for="endTime">⏰ Hora de Término *</label>
+              <label for="endTime"> Hora de Término *</label>
               <input type="time" id="endTime" required>
             </div>
           </div>
-
           <button type="submit" class="btn btn-primary">✅ Realizar Agendamento</button>
         </form>
       </section>
 
-      <!-- Lista de Agendamentos -->
+      <!-- LISTA DE AGENDAMENTOS -->
       <section class="booking-section">
-        <h2 class="section-title">📅 Agendamentos Realizados</h2>
+        <h2 class="section-title">
+          📅 Agendamentos Realizados
+          <div class="section-actions">
+            <button onclick="generatePDF()" class="btn btn-pdf" id="btnPdf">
+              📄 Gerar PDF
+            </button>
+            <button id="clearAllBtn" class="btn btn-danger btn-small">
+              🗑️ Limpar Todos
+            </button>
+          </div>
+        </h2>
         
         <div class="table-container">
           <table id="bookingsTable">
@@ -826,25 +749,24 @@
               <tr>
                 <th>📅 Data</th>
                 <th>⏰ Horário</th>
-                <th>👨🏫 Professor</th>
-                <th>📊 Status</th>
-                <th>🔧 Ações</th>
+                <th>👨‍🏫 Professor (a)</th>
+                <th> Status</th>
+                <th> Ações</th>
               </tr>
             </thead>
             <tbody>
-              <!-- Os agendamentos serão inseridos aqui -->
+              <!-- Agendamentos inseridos aqui -->
             </tbody>
           </table>
-        </div>
-
-        <div style="margin-top: 20px; text-align: right;">
-          <button id="clearAllBtn" class="btn btn-danger btn-small">🗑️ Limpar Todos os Agendamentos</button>
         </div>
       </section>
     </div>
   </div>
 
-  <!-- Modal de Mensagens -->
+  <!-- ÁREA DE IMPRESSÃO (usada apenas para gerar o PDF) -->
+  <div id="printArea"></div>
+
+  <!-- MODAL -->
   <div id="messageModal" class="modal">
     <div class="modal-content">
       <div class="modal-icon"></div>
@@ -866,20 +788,13 @@
       appId: "1:531185790681:web:d418e8ec37d8792b3918c8"
     };
 
-    // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const COLLECTION_NAME = 'agendamentos';
 
-    // ============================================
-    // VARIÁVEIS GLOBAIS
-    // ============================================
     let bookings = [];
     let filteredBookings = [];
 
-    // ============================================
-    // INICIALIZAÇÃO
-    // ============================================
     document.addEventListener('DOMContentLoaded', () => {
       loadBookings();
       setDefaultDate();
@@ -907,9 +822,6 @@
       if (filterDate) filterDate.value = today;
     }
 
-    // ============================================
-    // FUNÇÕES DO FIREBASE
-    // ============================================
     function loadBookings() {
       db.collection(COLLECTION_NAME)
         .orderBy('date')
@@ -927,7 +839,7 @@
           console.log('✅ Agendamentos carregados:', bookings.length);
         }, (error) => {
           console.error('❌ Erro ao carregar:', error);
-          showModal('❌', 'Erro ao carregar agendamentos. Verifique o console.');
+          showModal('❌', 'Erro ao carregar agendamentos.');
         });
     }
 
@@ -954,7 +866,7 @@
       if (confirm('Tem certeza que deseja cancelar este agendamento?')) {
         try {
           await db.collection(COLLECTION_NAME).doc(id).delete();
-          showModal('🗑️', 'Agendamento cancelado com sucesso!');
+          showModal('️', 'Agendamento cancelado com sucesso!');
         } catch (error) {
           console.error('❌ Erro ao cancelar:', error);
           showModal('❌', 'Erro ao cancelar agendamento.');
@@ -981,9 +893,6 @@
       }
     }
 
-    // ============================================
-    // FILTROS
-    // ============================================
     function applyFilters() {
       const filterDate = document.getElementById('filterDate').value;
       const filterProfessor = document.getElementById('filterProfessor').value.toLowerCase();
@@ -992,7 +901,6 @@
         const matchDate = !filterDate || booking.date === filterDate;
         const matchProfessor = !filterProfessor || 
           booking.personName.toLowerCase().includes(filterProfessor);
-        
         return matchDate && matchProfessor;
       });
 
@@ -1006,9 +914,6 @@
       renderBookings();
     }
 
-    // ============================================
-    // MANIPULAÇÃO DO FORMULÁRIO
-    // ============================================
     function handleBookingSubmit(event) {
       event.preventDefault();
 
@@ -1028,7 +933,7 @@
       }
 
       if (hasTimeConflict(date, startTime, endTime)) {
-        showModal('⚠️', 'Já existe um agendamento neste horário!');
+        showModal('️', 'Já existe um agendamento neste horário!');
         return;
       }
 
@@ -1042,7 +947,6 @@
         if (booking.date !== date || booking.status !== 'Ocupado') {
           return false;
         }
-
         return (
           (startTime >= booking.startTime && startTime < booking.endTime) ||
           (endTime > booking.startTime && endTime <= booking.endTime) ||
@@ -1051,9 +955,6 @@
       });
     }
 
-    // ============================================
-    // RENDERIZAÇÃO
-    // ============================================
     function renderBookings() {
       const tableBody = document.querySelector('#bookingsTable tbody');
       if (!tableBody) return;
@@ -1072,7 +973,6 @@
         return;
       }
 
-      // Ordenar por data e horário
       filteredBookings.sort((a, b) => {
         if (a.date !== b.date) {
           return a.date.localeCompare(b.date);
@@ -1123,9 +1023,6 @@
       return div.innerHTML;
     }
 
-    // ============================================
-    // ESTATÍSTICAS - ATUALIZAÇÃO EM TODAS AS VERSÕES
-    // ============================================
     function updateStats() {
       const today = new Date().toISOString().split('T')[0];
       const thisWeek = getWeekRange(new Date());
@@ -1138,17 +1035,14 @@
 
       const total = bookings.length;
 
-      // Atualiza versão Desktop
       updateElement('totalBookings', total);
       updateElement('todayBookings', todayCount);
       updateElement('weekBookings', weekCount);
 
-      // Atualiza versão Tablet
       updateElement('totalBookingsTablet', total);
       updateElement('todayBookingsTablet', todayCount);
       updateElement('weekBookingsTablet', weekCount);
 
-      // Atualiza versão Mobile
       updateElement('totalBookingsMobile', total);
       updateElement('todayBookingsMobile', todayCount);
       updateElement('weekBookingsMobile', weekCount);
@@ -1174,9 +1068,6 @@
       };
     }
 
-    // ============================================
-    // TOGGLE ESTATÍSTICAS (MOBILE)
-    // ============================================
     function toggleStats() {
       const toggleBtn = document.getElementById('statsToggle');
       const mobileContent = document.getElementById('statsMobileContent');
@@ -1184,15 +1075,122 @@
       toggleBtn.classList.toggle('active');
       mobileContent.classList.toggle('expanded');
       
-      // Atualiza o texto do botão
       const isExpanded = mobileContent.classList.contains('expanded');
       toggleBtn.querySelector('span:first-child').textContent = 
         isExpanded ? '📊 Ocultar Estatísticas' : '📊 Ver Estatísticas';
     }
 
     // ============================================
-    // MODAL
+    //  FUNÇÃO DE GERAR PDF
     // ============================================
+    async function generatePDF() {
+      if (filteredBookings.length === 0) {
+        showModal('⚠️', 'Não há agendamentos para gerar o PDF!');
+        return;
+      }
+
+      const btnPdf = document.getElementById('btnPdf');
+      const originalText = btnPdf.innerHTML;
+      btnPdf.innerHTML = '⏳ Gerando...';
+      btnPdf.disabled = true;
+
+      try {
+        // Prepara o conteúdo do PDF
+        const printArea = document.getElementById('printArea');
+        
+        const today = new Date();
+        const dataGeracao = today.toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        // Monta as linhas da tabela
+        let tableRows = '';
+        filteredBookings.forEach((booking, index) => {
+          const dateObj = new Date(booking.date + 'T00:00:00');
+          const dateFormatted = dateObj.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          });
+          
+          tableRows += `
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 8px;">${index + 1}</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${dateFormatted}</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${escapeHtml(booking.personName)}</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${booking.status}</td>
+            </tr>
+          `;
+        });
+
+        // Monta o HTML do PDF
+        printArea.innerHTML = `
+          <div style="padding: 20px; font-family: Arial, sans-serif;">
+            <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #1e3c72; padding-bottom: 15px;">
+              <h1 style="color: #1e3c72; margin: 0; font-size: 20px;">Escola Estadual Governador Walfredo Gurgel</h1>
+              <h2 style="color: #2a5298; margin: 5px 0; font-size: 16px;">Sistema de Agendamento - Sala de Vídeo</h2>
+              <p style="color: #666; margin: 5px 0; font-size: 12px;">Antônio Martins - RN | Fundada em 1935</p>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+              <h3 style="color: #333; margin: 0 0 10px 0; font-size: 16px;">📊 Relatório de Agendamentos</h3>
+              <p style="margin: 5px 0; font-size: 13px;"><strong>Data de geração:</strong> ${dataGeracao}</p>
+              <p style="margin: 5px 0; font-size: 13px;"><strong>Total de registros:</strong> ${filteredBookings.length} agendamento(s)</p>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+              <thead>
+                <tr style="background: #1e3c72; color: white;">
+                  <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Nº</th>
+                  <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Data</th>
+                  <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Horário</th>
+                  <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Professor (a)</th>
+                  <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tableRows}
+              </tbody>
+            </table>
+
+            <div style="margin-top: 40px; padding-top: 15px; border-top: 1px solid #ddd; text-align: center;">
+              <p style="font-size: 11px; color: #666; margin: 0;">
+                Documento gerado automaticamente pelo Sistema de Agendamento - EEGWG<br>
+                ${dataGeracao}
+              </p>
+            </div>
+          </div>
+        `;
+
+        // Configurações do PDF
+        const element = printArea;
+        const opt = {
+          margin: 10,
+          filename: `agendamentos-sala-video-${today.toISOString().split('T')[0]}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Gera o PDF
+        await html2pdf().set(opt).from(element).save();
+        
+        showModal('✅', 'PDF gerado com sucesso!');
+      } catch (error) {
+        console.error('❌ Erro ao gerar PDF:', error);
+        showModal('❌', 'Erro ao gerar o PDF. Tente novamente.');
+      } finally {
+        btnPdf.innerHTML = originalText;
+        btnPdf.disabled = false;
+        printArea.innerHTML = '';
+      }
+    }
+
     function showModal(icon, message) {
       const modal = document.getElementById('messageModal');
       if (!modal) return;
