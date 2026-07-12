@@ -8,8 +8,9 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   
-  <!-- html2pdf.js para gerar PDF -->
+  <!-- html2pdf.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   
   <style>
@@ -78,6 +79,67 @@
       margin-top: 10px;
       font-size: 0.9rem;
       opacity: 0.9;
+    }
+
+    /* ===== BARRA DE ADMIN ===== */
+    .admin-bar {
+      display: none;
+      background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+      color: white;
+      padding: 12px 20px;
+      text-align: center;
+      font-weight: 600;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .admin-bar.active {
+      display: flex;
+    }
+
+    .admin-bar span {
+      font-size: 0.95rem;
+    }
+
+    .btn-logout {
+      padding: 6px 16px;
+      background: white;
+      color: #e67e22;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .btn-logout:hover {
+      background: #f8f9fa;
+    }
+
+    /* ===== BOTÃO LOGIN NO CABEÇALHO ===== */
+    .btn-login-header {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .btn-login-header:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    header {
+      position: relative;
     }
 
     .content {
@@ -359,15 +421,6 @@
       background: #218838;
     }
 
-    .btn-info {
-      background: #17a2b8;
-      color: white;
-    }
-
-    .btn-info:hover {
-      background: #138496;
-    }
-
     .btn-small {
       padding: 10px 16px;
       font-size: 0.95rem;
@@ -504,21 +557,51 @@
       background-color: #0056b3;
     }
 
-    .empty-state {
-      text-align: center;
-      padding: 3rem;
-      color: #666;
+    /* ===== MODAL DE LOGIN ===== */
+    .login-modal-content {
+      max-width: 400px;
     }
 
-    /* ===== ÁREA DE IMPRESSÃO (escondida na tela) ===== */
+    .login-modal-content h3 {
+      color: #1e3c72;
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+    }
+
+    .login-modal-content .form-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+
+    .login-modal-content .btn-primary {
+      margin-top: 10px;
+    }
+
+    .login-error {
+      color: #dc3545;
+      font-size: 0.9rem;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .login-error.show {
+      display: block;
+    }
+
+    .login-hint {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+    }
+
+    /* ===== ÁREA DE IMPRESSÃO ===== */
     #printArea {
       display: none;
     }
 
-    /* ============================================ */
-    /* 📱 RESPONSIVIDADE */
-    /* ============================================ */
-
+    /* ===== RESPONSIVIDADE ===== */
     @media (max-width: 768px) {
       body { padding: 5px; }
       .container { border-radius: 8px; }
@@ -557,6 +640,11 @@
         flex: 1;
         min-width: 140px;
       }
+
+      .btn-login-header {
+        position: static;
+        margin-top: 10px;
+      }
     }
 
     @media (max-width: 480px) {
@@ -592,7 +680,7 @@
     }
 
     @media (hover: none) and (pointer: coarse) {
-      .btn, .btn-danger, .btn-pdf { min-height: 44px; }
+      .btn, .btn-danger, .btn-pdf, .btn-logout { min-height: 44px; }
       input, select { min-height: 44px; }
       .stats-mobile-toggle { min-height: 44px; }
     }
@@ -601,6 +689,9 @@
 <body>
   <div class="container">
     <header>
+      <button class="btn-login-header" id="btnLoginHeader" onclick="openLoginModal()">
+        🔐 Login Admin
+      </button>
       <div class="logo-container">
         <img src="Logo EEGWG(2).png" alt="Logo EEGWG" class="logo">
       </div>
@@ -611,11 +702,17 @@
       </div>
     </header>
 
+    <!-- Barra de Admin (visível apenas quando logado) -->
+    <div class="admin-bar" id="adminBar">
+      <span>👔 Modo Administrador ativo</span>
+      <button class="btn-logout" onclick="logoutAdmin()">Sair</button>
+    </div>
+
     <div class="content">
       <!-- ESTATÍSTICAS -->
       <div class="stats-desktop">
         <div class="stat-card">
-          <div class="stat-icon"></div>
+          <div class="stat-icon">📊</div>
           <div class="stat-number" id="totalBookings">0</div>
           <div class="stat-label">Total de Agendamentos</div>
         </div>
@@ -625,7 +722,7 @@
           <div class="stat-label">Agendamentos Hoje</div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">📆</div>
+          <div class="stat-icon"></div>
           <div class="stat-number" id="weekBookings">0</div>
           <div class="stat-label">Esta Semana</div>
         </div>
@@ -661,14 +758,14 @@
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">📅</div>
+          <div class="stat-icon"></div>
           <div>
             <div class="stat-number" id="todayBookingsMobile">0</div>
             <div class="stat-label">Agendamentos Hoje</div>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon"></div>
+          <div class="stat-icon">📆</div>
           <div>
             <div class="stat-number" id="weekBookingsMobile">0</div>
             <div class="stat-label">Esta Semana</div>
@@ -685,7 +782,7 @@
             <input type="date" id="filterDate">
           </div>
           <div class="form-group">
-            <label for="filterProfessor">‍🏫 Professor (a):</label>
+            <label for="filterProfessor">👨‍🏫 Professor (a):</label>
             <input type="text" id="filterProfessor" placeholder="Digite o nome do professor (a)">
           </div>
           <div class="form-group" style="display: flex; align-items: flex-end;">
@@ -707,7 +804,7 @@
         <form id="bookingForm">
           <div class="form-row">
             <div class="form-group">
-              <label for="personName">👨‍ Nome do Professor (a) *</label>
+              <label for="personName">👨‍🏫 Nome do Professor (a) *</label>
               <input type="text" id="personName" placeholder="Digite seu nome completo" required>
             </div>
             <div class="form-group">
@@ -721,7 +818,7 @@
               <input type="time" id="startTime" required>
             </div>
             <div class="form-group">
-              <label for="endTime"> Hora de Término *</label>
+              <label for="endTime">⏰ Hora de Término *</label>
               <input type="time" id="endTime" required>
             </div>
           </div>
@@ -735,10 +832,10 @@
           📅 Agendamentos Realizados
           <div class="section-actions">
             <button onclick="generatePDF()" class="btn btn-pdf" id="btnPdf">
-              📄 Gerar PDF
+               Gerar PDF
             </button>
-            <button id="clearAllBtn" class="btn btn-danger btn-small">
-              🗑️ Limpar Todos
+            <button id="clearAllBtn" class="btn btn-danger btn-small" style="display: none;">
+              ️ Limpar Todos
             </button>
           </div>
         </h2>
@@ -747,11 +844,11 @@
           <table id="bookingsTable">
             <thead>
               <tr>
-                <th>📅 Data</th>
-                <th>⏰ Horário</th>
-                <th>👨‍🏫 Professor (a)</th>
-                <th> Status</th>
-                <th> Ações</th>
+                <th> Data</th>
+                <th> Horário</th>
+                <th>‍🏫 Professor (a)</th>
+                <th>📊 Status</th>
+                <th>🔧 Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -763,10 +860,37 @@
     </div>
   </div>
 
-  <!-- ÁREA DE IMPRESSÃO (usada apenas para gerar o PDF) -->
+  <!-- MODAL DE LOGIN -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content login-modal-content">
+      <h3>🔐 Login de Administrador</h3>
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="loginEmail">Email:</label>
+          <input type="email" id="loginEmail" placeholder="admin@eegwg.com" required>
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Senha:</label>
+          <input type="password" id="loginPassword" placeholder="Digite a senha" required>
+        </div>
+        <div class="login-error" id="loginError">
+          Email ou senha incorretos!
+        </div>
+        <button type="submit" class="btn btn-primary">Entrar</button>
+        <button type="button" class="btn btn-secondary" onclick="closeLoginModal()" style="margin-top: 10px;">
+          Cancelar
+        </button>
+      </form>
+      <div class="login-hint">
+         Acesso restrito à coordenação e direção
+      </div>
+    </div>
+  </div>
+
+  <!-- ÁREA DE IMPRESSÃO -->
   <div id="printArea"></div>
 
-  <!-- MODAL -->
+  <!-- MODAL DE MENSAGENS -->
   <div id="messageModal" class="modal">
     <div class="modal-content">
       <div class="modal-icon"></div>
@@ -790,26 +914,43 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const auth = firebase.auth();
     const COLLECTION_NAME = 'agendamentos';
 
+    // ============================================
+    // LISTA DE EMAILS AUTORIZADOS COMO ADMIN
+    // ============================================
+    // Adicione aqui os emails dos 3 a 5 administradores
+    const ADMIN_EMAILS = [
+      'coordenador@eegwg.com',
+      'diretor@eegwg.com',
+      'secretaria@eegwg.com',
+      'admin@eegwg.com',
+      'supervisor@eegwg.com'
+    ];
+
+    // ============================================
+    // VARIÁVEIS GLOBAIS
+    // ============================================
     let bookings = [];
     let filteredBookings = [];
+    let isAdmin = false;
+    let currentAdminEmail = null;
 
+    // ============================================
+    // INICIALIZAÇÃO
+    // ============================================
     document.addEventListener('DOMContentLoaded', () => {
       loadBookings();
       setDefaultDate();
       setupEventListeners();
+      checkAdminSession();
     });
 
     function setupEventListeners() {
       const bookingForm = document.getElementById('bookingForm');
       if (bookingForm) {
         bookingForm.addEventListener('submit', handleBookingSubmit);
-      }
-
-      const clearBtn = document.getElementById('clearAllBtn');
-      if (clearBtn) {
-        clearBtn.addEventListener('click', clearAllBookings);
       }
     }
 
@@ -822,6 +963,95 @@
       if (filterDate) filterDate.value = today;
     }
 
+    // ============================================
+    // SISTEMA DE LOGIN
+    // ============================================
+    function checkAdminSession() {
+      const savedEmail = localStorage.getItem('adminEmail');
+      if (savedEmail && ADMIN_EMAILS.includes(savedEmail)) {
+        isAdmin = true;
+        currentAdminEmail = savedEmail;
+        updateAdminUI();
+      }
+    }
+
+    function openLoginModal() {
+      document.getElementById('loginModal').style.display = 'flex';
+      document.getElementById('loginError').classList.remove('show');
+      document.getElementById('loginForm').reset();
+    }
+
+    function closeLoginModal() {
+      document.getElementById('loginModal').style.display = 'none';
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      
+      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+      const password = document.getElementById('loginPassword').value;
+      const errorDiv = document.getElementById('loginError');
+
+      // Verifica se o email está na lista de admins
+      if (!ADMIN_EMAILS.includes(email)) {
+        errorDiv.textContent = 'Email não autorizado!';
+        errorDiv.classList.add('show');
+        return;
+      }
+
+      try {
+        // Tenta fazer login com Firebase Auth
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        
+        // Login bem-sucedido
+        isAdmin = true;
+        currentAdminEmail = email;
+        localStorage.setItem('adminEmail', email);
+        
+        updateAdminUI();
+        closeLoginModal();
+        showModal('✅', 'Login realizado com sucesso!');
+        
+      } catch (error) {
+        console.error('Erro no login:', error);
+        errorDiv.textContent = 'Email ou senha incorretos!';
+        errorDiv.classList.add('show');
+      }
+    }
+
+    function logoutAdmin() {
+      if (confirm('Deseja realmente sair do modo administrador?')) {
+        isAdmin = false;
+        currentAdminEmail = null;
+        localStorage.removeItem('adminEmail');
+        auth.signOut();
+        updateAdminUI();
+        showModal('👋', 'Logout realizado com sucesso!');
+      }
+    }
+
+    function updateAdminUI() {
+      const adminBar = document.getElementById('adminBar');
+      const clearAllBtn = document.getElementById('clearAllBtn');
+      const btnLoginHeader = document.getElementById('btnLoginHeader');
+
+      if (isAdmin) {
+        adminBar.classList.add('active');
+        clearAllBtn.style.display = 'inline-block';
+        btnLoginHeader.style.display = 'none';
+      } else {
+        adminBar.classList.remove('active');
+        clearAllBtn.style.display = 'none';
+        btnLoginHeader.style.display = 'block';
+      }
+
+      // Re-renderiza a tabela para atualizar os botões de cancelar
+      renderBookings();
+    }
+
+    // ============================================
+    // FUNÇÕES DO FIREBASE
+    // ============================================
     function loadBookings() {
       db.collection(COLLECTION_NAME)
         .orderBy('date')
@@ -839,7 +1069,7 @@
           console.log('✅ Agendamentos carregados:', bookings.length);
         }, (error) => {
           console.error('❌ Erro ao carregar:', error);
-          showModal('❌', 'Erro ao carregar agendamentos.');
+          showModal('', 'Erro ao carregar agendamentos.');
         });
     }
 
@@ -862,11 +1092,20 @@
       }
     }
 
-    async function cancelBooking(id) {
+    async function cancelBooking(id, personName) {
+      // Verifica se é admin ou se é o próprio professor
+      if (!isAdmin) {
+        const currentPersonName = document.getElementById('personName').value.trim().toLowerCase();
+        if (currentPersonName !== personName.toLowerCase()) {
+          showModal('⚠️', 'Você só pode cancelar seus próprios agendamentos!');
+          return;
+        }
+      }
+
       if (confirm('Tem certeza que deseja cancelar este agendamento?')) {
         try {
           await db.collection(COLLECTION_NAME).doc(id).delete();
-          showModal('️', 'Agendamento cancelado com sucesso!');
+          showModal('🗑️', 'Agendamento cancelado com sucesso!');
         } catch (error) {
           console.error('❌ Erro ao cancelar:', error);
           showModal('❌', 'Erro ao cancelar agendamento.');
@@ -875,6 +1114,12 @@
     }
 
     async function clearAllBookings() {
+      // Só admin pode limpar tudo
+      if (!isAdmin) {
+        showModal('️', 'Apenas administradores podem limpar todos os agendamentos!');
+        return;
+      }
+
       if (confirm('⚠️ ATENÇÃO: Apagar TODOS os agendamentos?')) {
         if (confirm('Última chance. Deseja realmente apagar tudo?')) {
           try {
@@ -893,6 +1138,9 @@
       }
     }
 
+    // ============================================
+    // FILTROS
+    // ============================================
     function applyFilters() {
       const filterDate = document.getElementById('filterDate').value;
       const filterProfessor = document.getElementById('filterProfessor').value.toLowerCase();
@@ -914,6 +1162,9 @@
       renderBookings();
     }
 
+    // ============================================
+    // MANIPULAÇÃO DO FORMULÁRIO
+    // ============================================
     function handleBookingSubmit(event) {
       event.preventDefault();
 
@@ -955,6 +1206,9 @@
       });
     }
 
+    // ============================================
+    // RENDERIZAÇÃO
+    // ============================================
     function renderBookings() {
       const tableBody = document.querySelector('#bookingsTable tbody');
       if (!tableBody) return;
@@ -996,18 +1250,40 @@
         year: 'numeric'
       });
 
+      // Determina se deve mostrar o botão de cancelar
+      let cancelButton = '';
+      
+      if (isAdmin) {
+        // Admin pode cancelar qualquer agendamento
+        cancelButton = `
+          <button onclick="cancelBooking('${booking.id}', '${escapeHtml(booking.personName)}')" 
+                  class="btn btn-danger btn-small" 
+                  title="Cancelar agendamento">
+            🗑️ Cancelar
+          </button>
+        `;
+      } else {
+        // Usuário comum: verifica se é o próprio agendamento
+        const currentPersonName = document.getElementById('personName').value.trim();
+        if (currentPersonName && currentPersonName.toLowerCase() === booking.personName.toLowerCase()) {
+          cancelButton = `
+            <button onclick="cancelBooking('${booking.id}', '${escapeHtml(booking.personName)}')" 
+                    class="btn btn-danger btn-small" 
+                    title="Cancelar seu agendamento">
+              🗑️ Cancelar
+            </button>
+          `;
+        } else {
+          cancelButton = '<span style="color: #999; font-size: 0.85rem;">—</span>';
+        }
+      }
+
       row.innerHTML = `
         <td>${dateFormatted}</td>
         <td>${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}</td>
         <td>${escapeHtml(booking.personName)}</td>
         <td><span class="status-badge status-${booking.status.toLowerCase()}">${booking.status}</span></td>
-        <td>
-          <button onclick="cancelBooking('${booking.id}')" 
-                  class="btn btn-danger btn-small" 
-                  title="Cancelar agendamento">
-            🗑️ Cancelar
-          </button>
-        </td>
+        <td>${cancelButton}</td>
       `;
 
       return row;
@@ -1020,9 +1296,12 @@
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text;
-      return div.innerHTML;
+      return div.innerHTML.replace(/'/g, "\\'");
     }
 
+    // ============================================
+    // ESTATÍSTICAS
+    // ============================================
     function updateStats() {
       const today = new Date().toISOString().split('T')[0];
       const thisWeek = getWeekRange(new Date());
@@ -1081,7 +1360,7 @@
     }
 
     // ============================================
-    //  FUNÇÃO DE GERAR PDF
+    // GERAR PDF
     // ============================================
     async function generatePDF() {
       if (filteredBookings.length === 0) {
@@ -1095,7 +1374,6 @@
       btnPdf.disabled = true;
 
       try {
-        // Prepara o conteúdo do PDF
         const printArea = document.getElementById('printArea');
         
         const today = new Date();
@@ -1107,7 +1385,6 @@
           minute: '2-digit'
         });
 
-        // Monta as linhas da tabela
         let tableRows = '';
         filteredBookings.forEach((booking, index) => {
           const dateObj = new Date(booking.date + 'T00:00:00');
@@ -1128,7 +1405,6 @@
           `;
         });
 
-        // Monta o HTML do PDF
         printArea.innerHTML = `
           <div style="padding: 20px; font-family: Arial, sans-serif;">
             <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #1e3c72; padding-bottom: 15px;">
@@ -1167,7 +1443,6 @@
           </div>
         `;
 
-        // Configurações do PDF
         const element = printArea;
         const opt = {
           margin: 10,
@@ -1177,7 +1452,6 @@
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // Gera o PDF
         await html2pdf().set(opt).from(element).save();
         
         showModal('✅', 'PDF gerado com sucesso!');
@@ -1191,6 +1465,9 @@
       }
     }
 
+    // ============================================
+    // MODAL
+    // ============================================
     function showModal(icon, message) {
       const modal = document.getElementById('messageModal');
       if (!modal) return;
@@ -1213,8 +1490,12 @@
 
     window.onclick = function(event) {
       const modal = document.getElementById('messageModal');
+      const loginModal = document.getElementById('loginModal');
       if (event.target === modal) {
         closeModal();
+      }
+      if (event.target === loginModal) {
+        closeLoginModal();
       }
     }
   </script>
