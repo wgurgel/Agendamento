@@ -327,6 +327,7 @@
       border-radius: 6px;
       font-size: 1rem;
       transition: all 0.3s;
+      background-color: white;
     }
 
     .form-group input:focus,
@@ -677,7 +678,7 @@
   <div class="container">
     <header>
       <button class="btn-login-header" id="btnLoginHeader" onclick="openLoginModal()">
-         Login Admin
+        🔐 Login Admin
       </button>
       <div class="logo-container">
         <img src="Logo EEGWG(2).png" alt="Logo EEGWG" class="logo">
@@ -699,12 +700,12 @@
       <!-- ESTATÍSTICAS -->
       <div class="stats-desktop">
         <div class="stat-card">
-          <div class="stat-icon">📊</div>
+          <div class="stat-icon"></div>
           <div class="stat-number" id="totalBookings">0</div>
           <div class="stat-label">Total de Agendamentos</div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon"></div>
+          <div class="stat-icon">📅</div>
           <div class="stat-number" id="todayBookings">0</div>
           <div class="stat-label">Agendamentos Hoje</div>
         </div>
@@ -738,7 +739,7 @@
       </button>
       <div class="stats-mobile-content" id="statsMobileContent">
         <div class="stat-card">
-          <div class="stat-icon"></div>
+          <div class="stat-icon">📊</div>
           <div>
             <div class="stat-number" id="totalBookingsMobile">0</div>
             <div class="stat-label">Total de Agendamentos</div>
@@ -762,14 +763,14 @@
 
       <!-- FILTROS -->
       <section class="filter-section">
-        <h2 class="filter-title">🔍 Filtrar Agendamentos</h2>
+        <h2 class="filter-title"> Filtrar Agendamentos</h2>
         <div class="filter-grid">
           <div class="form-group">
             <label for="filterDate">📅 Data:</label>
             <input type="date" id="filterDate">
           </div>
           <div class="form-group">
-            <label for="filterProfessor">👨‍🏫 Professor (a):</label>
+            <label for="filterProfessor">👨🏫 Professor (a):</label>
             <input type="text" id="filterProfessor" placeholder="Digite o nome do professor (a)">
           </div>
           <div class="form-group" style="display: flex; align-items: flex-end;">
@@ -791,8 +792,32 @@
         <form id="bookingForm">
           <div class="form-row">
             <div class="form-group">
-              <label for="personName">👨‍🏫 Nome do Professor (a) *</label>
-              <input type="text" id="personName" placeholder="Digite seu nome completo" required>
+              <label for="personName">‍🏫 Nome do Professor (a) *</label>
+              <select id="personName" required>
+                <option value="">Selecione seu nome...</option>
+                <option value="Prof. Almeida">Prof. Almeida</option>
+                <option value="Prof. Allyson Simonssen">Prof. Allyson Simonssen</option>
+                <option value="Profa. Claudinha">Profa. Claudinha</option>
+                <option value="Prof. Fernando">Prof. Fernando</option>
+                <option value="Prof. Gildeval">Prof. Gildeval</option>
+                <option value="Profa. Humbertina Lúcio">Profa. Humbertina Lúcio</option>
+                <option value="Ismael Melo">Ismael Melo</option>
+                <option value="Profa. Ivana Verciane">Profa. Ivana Verciane</option>
+                <option value="Prof. Josean Ferreira">Prof. Josean Ferreira</option>
+                <option value="Profa. Larissa Vieira">Profa. Larissa Vieira</option>
+                <option value="Prof. Luan Monteiro">Prof. Luan Monteiro</option>
+                <option value="Profa. Maria Lúcia">Profa. Maria Lúcia</option>
+                <option value="Profa. Maria Neta">Profa. Maria Neta</option>
+                <option value="Prof. Messias Torres">Prof. Messias Torres</option>
+                <option value="Prof. Moisés Torres">Prof. Moisés Torres</option>
+                <option value="Profa. Neta Oliveira">Profa. Neta Oliveira</option>
+                <option value="Profa. Rosa Fhânia">Profa. Rosa Fhânia</option>
+                <option value="Prof. Rosevelt">Prof. Rosevelt</option>
+                <option value="Prof. Santiago Trajano">Prof. Santiago Trajano</option>
+                <option value="Profa. Ubiracira Lima">Profa. Ubiracira Lima</option>
+                <option value="Prof. Valdeci de Lima">Prof. Valdeci de Lima</option>
+                <option value="Profa. Valdineide">Profa. Valdineide</option>
+              </select>
             </div>
             <div class="form-group">
               <label for="bookingDate">📅 Data do Agendamento *</label>
@@ -801,7 +826,7 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="startTime"> Hora de Início *</label>
+              <label for="startTime">⏰ Hora de Início *</label>
               <input type="time" id="startTime" required>
             </div>
             <div class="form-group">
@@ -816,7 +841,7 @@
       <!-- LISTA DE AGENDAMENTOS -->
       <section class="booking-section">
         <h2 class="section-title">
-           Agendamentos Realizados
+          📅 Agendamentos Realizados
           <div class="section-actions">
             <button onclick="generatePDF()" class="btn btn-pdf" id="btnPdf">
               📄 Gerar PDF
@@ -936,16 +961,18 @@
         clearBtn.addEventListener('click', clearAllBookings);
       }
 
-      // 🆕 Salvar o nome do professor automaticamente
-      const personNameInput = document.getElementById('personName');
-      if (personNameInput) {
+      //  Salvar o professor selecionado automaticamente (agora é select)
+      const personNameSelect = document.getElementById('personName');
+      if (personNameSelect) {
+        // Carrega o último professor selecionado
         const savedName = localStorage.getItem('lastUsedName');
         if (savedName) {
-          personNameInput.value = savedName;
+          personNameSelect.value = savedName;
         }
         
-        personNameInput.addEventListener('input', (e) => {
-          localStorage.setItem('lastUsedName', e.target.value.trim());
+        // Salva sempre que o professor mudar a seleção
+        personNameSelect.addEventListener('change', (e) => {
+          localStorage.setItem('lastUsedName', e.target.value);
         });
       }
     }
@@ -1005,7 +1032,7 @@
         isAdmin = false;
         localStorage.removeItem('adminLogged');
         updateAdminUI();
-        showModal('', 'Logout realizado com sucesso!');
+        showModal('👋', 'Logout realizado com sucesso!');
       }
     }
 
@@ -1065,13 +1092,13 @@
         showModal('✅', 'Agendamento realizado com sucesso!');
       } catch (error) {
         console.error('❌ Erro ao salvar:', error);
-        showModal('❌', 'Erro ao salvar agendamento.');
+        showModal('', 'Erro ao salvar agendamento.');
       }
     }
 
     async function cancelBooking(id, personName) {
       if (!isAdmin) {
-        const currentPersonName = localStorage.getItem('lastUsedName') || document.getElementById('personName').value.trim();
+        const currentPersonName = localStorage.getItem('lastUsedName') || document.getElementById('personName').value;
         if (currentPersonName.toLowerCase() !== personName.toLowerCase()) {
           showModal('⚠️', 'Você só pode cancelar seus próprios agendamentos!');
           return;
@@ -1081,7 +1108,7 @@
       if (confirm('Tem certeza que deseja cancelar este agendamento?')) {
         try {
           await db.collection(COLLECTION_NAME).doc(id).delete();
-          showModal('🗑️', 'Agendamento cancelado com sucesso!');
+          showModal('️', 'Agendamento cancelado com sucesso!');
         } catch (error) {
           console.error('❌ Erro ao cancelar:', error);
           showModal('❌', 'Erro ao cancelar agendamento.');
@@ -1107,14 +1134,14 @@
             showModal('🗑️', 'Todos os agendamentos foram removidos!');
           } catch (error) {
             console.error('❌ Erro ao limpar:', error);
-            showModal('❌', 'Erro ao limpar agendamentos.');
+            showModal('', 'Erro ao limpar agendamentos.');
           }
         }
       }
     }
 
     // ============================================
-    // 🆕 FUNÇÃO: Verificar se agendamento está no passado
+    // FUNÇÃO: Verificar se agendamento está no passado
     // ============================================
     function isBookingPast(booking) {
       const today = new Date().toISOString().split('T')[0];
@@ -1123,14 +1150,11 @@
       const currentMinute = now.getMinutes().toString().padStart(2, '0');
       const currentTime = `${currentHour}:${currentMinute}`;
 
-      // Se a data é anterior a hoje, está no passado
       if (booking.date < today) {
         return true;
       }
 
-      // Se a data é hoje, verificar se o horário já passou
       if (booking.date === today) {
-        // Se o horário de término já passou, o agendamento está no passado
         if (booking.endTime <= currentTime) {
           return true;
         }
@@ -1146,22 +1170,15 @@
       const filterDate = document.getElementById('filterDate').value;
       const filterProfessor = document.getElementById('filterProfessor').value.toLowerCase();
 
-      // Salvar filtros ativos
       activeFilters = { date: filterDate, professor: filterProfessor };
 
-      // Verificar se há filtros ativos
       const hasActiveFilters = filterDate || filterProfessor;
 
       filteredBookings = bookings.filter(booking => {
-        // Filtro por data
         const matchDate = !filterDate || booking.date === filterDate;
-        
-        // Filtro por professor
         const matchProfessor = !filterProfessor || 
           booking.personName.toLowerCase().includes(filterProfessor);
 
-        // 🆕 Se NÃO há filtros ativos, esconder agendamentos passados
-        // Se há filtros ativos, mostrar todos (incluindo passados)
         const isPast = isBookingPast(booking);
         const showPast = hasActiveFilters;
 
@@ -1189,7 +1206,13 @@
       const startTime = document.getElementById('startTime').value;
       const endTime = document.getElementById('endTime').value;
 
-      if (!personName || !date || !startTime || !endTime) {
+      // Validação: verificar se selecionou um professor
+      if (!personName) {
+        showModal('⚠️', 'Por favor, selecione seu nome na lista!');
+        return;
+      }
+
+      if (!date || !startTime || !endTime) {
         showModal('⚠️', 'Por favor, preencha todos os campos!');
         return;
       }
@@ -1205,14 +1228,12 @@
       }
 
       addBooking(personName, date, startTime, endTime);
-      document.getElementById('bookingForm').reset();
-      setDefaultDate();
       
-      // Restaurar o nome do professor após o reset
-      const savedName = localStorage.getItem('lastUsedName');
-      if (savedName) {
-        document.getElementById('personName').value = savedName;
-      }
+      // Limpa apenas data e horários (mantém o professor selecionado)
+      document.getElementById('bookingDate').value = '';
+      document.getElementById('startTime').value = '';
+      document.getElementById('endTime').value = '';
+      setDefaultDate();
     }
 
     function hasTimeConflict(date, startTime, endTime) {
@@ -1285,11 +1306,11 @@
           <button onclick="cancelBooking('${booking.id}', '${escapeHtml(booking.personName)}')" 
                   class="btn btn-danger btn-small" 
                   title="Cancelar agendamento">
-            ️ Cancelar
+            🗑️ Cancelar
           </button>
         `;
       } else {
-        const currentPersonName = localStorage.getItem('lastUsedName') || document.getElementById('personName').value.trim();
+        const currentPersonName = localStorage.getItem('lastUsedName') || document.getElementById('personName').value;
         if (currentPersonName && currentPersonName.toLowerCase() === booking.personName.toLowerCase()) {
           cancelButton = `
             <button onclick="cancelBooking('${booking.id}', '${escapeHtml(booking.personName)}')" 
@@ -1381,7 +1402,7 @@
       
       const isExpanded = mobileContent.classList.contains('expanded');
       toggleBtn.querySelector('span:first-child').textContent = 
-        isExpanded ? ' Ocultar Estatísticas' : ' Ver Estatísticas';
+        isExpanded ? '📊 Ocultar Estatísticas' : ' Ver Estatísticas';
     }
 
     // ============================================
@@ -1481,7 +1502,7 @@
         
         showModal('✅', 'PDF gerado com sucesso!');
       } catch (error) {
-        console.error('❌ Erro ao gerar PDF:', error);
+        console.error(' Erro ao gerar PDF:', error);
         showModal('❌', 'Erro ao gerar o PDF. Tente novamente.');
       } finally {
         btnPdf.innerHTML = originalText;
