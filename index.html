@@ -677,7 +677,7 @@
   <div class="container">
     <header>
       <button class="btn-login-header" id="btnLoginHeader" onclick="openLoginModal()">
-        🔐 Login Admin
+         Login Admin
       </button>
       <div class="logo-container">
         <img src="Logo EEGWG(2).png" alt="Logo EEGWG" class="logo">
@@ -704,7 +704,7 @@
           <div class="stat-label">Total de Agendamentos</div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">📅</div>
+          <div class="stat-icon"></div>
           <div class="stat-number" id="todayBookings">0</div>
           <div class="stat-label">Agendamentos Hoje</div>
         </div>
@@ -765,11 +765,11 @@
         <h2 class="filter-title">🔍 Filtrar Agendamentos</h2>
         <div class="filter-grid">
           <div class="form-group">
-            <label for="filterDate"> Data:</label>
+            <label for="filterDate">📅 Data:</label>
             <input type="date" id="filterDate">
           </div>
           <div class="form-group">
-            <label for="filterProfessor">👨‍ Professor (a):</label>
+            <label for="filterProfessor">👨‍🏫 Professor (a):</label>
             <input type="text" id="filterProfessor" placeholder="Digite o nome do professor (a)">
           </div>
           <div class="form-group" style="display: flex; align-items: flex-end;">
@@ -791,7 +791,7 @@
         <form id="bookingForm">
           <div class="form-row">
             <div class="form-group">
-              <label for="personName">‍🏫 Nome do Professor (a) *</label>
+              <label for="personName">👨‍🏫 Nome do Professor (a) *</label>
               <input type="text" id="personName" placeholder="Digite seu nome completo" required>
             </div>
             <div class="form-group">
@@ -801,7 +801,7 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="startTime">⏰ Hora de Início *</label>
+              <label for="startTime"> Hora de Início *</label>
               <input type="time" id="startTime" required>
             </div>
             <div class="form-group">
@@ -816,7 +816,7 @@
       <!-- LISTA DE AGENDAMENTOS -->
       <section class="booking-section">
         <h2 class="section-title">
-          📅 Agendamentos Realizados
+           Agendamentos Realizados
           <div class="section-actions">
             <button onclick="generatePDF()" class="btn btn-pdf" id="btnPdf">
               📄 Gerar PDF
@@ -834,8 +834,8 @@
                 <th>📅 Data</th>
                 <th>⏰ Horário</th>
                 <th>👨‍🏫 Professor (a)</th>
-                <th> Status</th>
-                <th> Ações</th>
+                <th>📊 Status</th>
+                <th>🔧 Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -910,6 +910,7 @@
     let bookings = [];
     let filteredBookings = [];
     let isAdmin = false;
+    let activeFilters = { date: '', professor: '' };
 
     // ============================================
     // INICIALIZAÇÃO
@@ -935,16 +936,14 @@
         clearBtn.addEventListener('click', clearAllBookings);
       }
 
-      // 🆕 NOVO: Salvar o nome do professor automaticamente
+      // 🆕 Salvar o nome do professor automaticamente
       const personNameInput = document.getElementById('personName');
       if (personNameInput) {
-        // Carrega o nome salvo quando a página abre
         const savedName = localStorage.getItem('lastUsedName');
         if (savedName) {
           personNameInput.value = savedName;
         }
         
-        // Salva o nome sempre que o professor digitar
         personNameInput.addEventListener('input', (e) => {
           localStorage.setItem('lastUsedName', e.target.value.trim());
         });
@@ -1006,7 +1005,7 @@
         isAdmin = false;
         localStorage.removeItem('adminLogged');
         updateAdminUI();
-        showModal('👋', 'Logout realizado com sucesso!');
+        showModal('', 'Logout realizado com sucesso!');
       }
     }
 
@@ -1042,8 +1041,7 @@
               ...doc.data()
             });
           });
-          filteredBookings = [...bookings];
-          renderBookings();
+          applyFilters();
           updateStats();
           console.log('✅ Agendamentos carregados:', bookings.length);
         }, (error) => {
@@ -1093,7 +1091,7 @@
 
     async function clearAllBookings() {
       if (!isAdmin) {
-        showModal('️', 'Apenas administradores podem limpar todos os agendamentos!');
+        showModal('⚠️', 'Apenas administradores podem limpar todos os agendamentos!');
         return;
       }
 
@@ -1116,17 +1114,58 @@
     }
 
     // ============================================
-    // FILTROS
+    // 🆕 FUNÇÃO: Verificar se agendamento está no passado
+    // ============================================
+    function isBookingPast(booking) {
+      const today = new Date().toISOString().split('T')[0];
+      const now = new Date();
+      const currentHour = now.getHours().toString().padStart(2, '0');
+      const currentMinute = now.getMinutes().toString().padStart(2, '0');
+      const currentTime = `${currentHour}:${currentMinute}`;
+
+      // Se a data é anterior a hoje, está no passado
+      if (booking.date < today) {
+        return true;
+      }
+
+      // Se a data é hoje, verificar se o horário já passou
+      if (booking.date === today) {
+        // Se o horário de término já passou, o agendamento está no passado
+        if (booking.endTime <= currentTime) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    // ============================================
+    // FILTROS (COM LÓGICA DE ESCONDER PASSADOS)
     // ============================================
     function applyFilters() {
       const filterDate = document.getElementById('filterDate').value;
       const filterProfessor = document.getElementById('filterProfessor').value.toLowerCase();
 
+      // Salvar filtros ativos
+      activeFilters = { date: filterDate, professor: filterProfessor };
+
+      // Verificar se há filtros ativos
+      const hasActiveFilters = filterDate || filterProfessor;
+
       filteredBookings = bookings.filter(booking => {
+        // Filtro por data
         const matchDate = !filterDate || booking.date === filterDate;
+        
+        // Filtro por professor
         const matchProfessor = !filterProfessor || 
           booking.personName.toLowerCase().includes(filterProfessor);
-        return matchDate && matchProfessor;
+
+        // 🆕 Se NÃO há filtros ativos, esconder agendamentos passados
+        // Se há filtros ativos, mostrar todos (incluindo passados)
+        const isPast = isBookingPast(booking);
+        const showPast = hasActiveFilters;
+
+        return matchDate && matchProfessor && (showPast || !isPast);
       });
 
       renderBookings();
@@ -1135,8 +1174,8 @@
     function clearFilters() {
       document.getElementById('filterDate').value = '';
       document.getElementById('filterProfessor').value = '';
-      filteredBookings = [...bookings];
-      renderBookings();
+      activeFilters = { date: '', professor: '' };
+      applyFilters();
     }
 
     // ============================================
@@ -1161,7 +1200,7 @@
       }
 
       if (hasTimeConflict(date, startTime, endTime)) {
-        showModal('️', 'Já existe um agendamento neste horário!');
+        showModal('⚠️', 'Já existe um agendamento neste horário!');
         return;
       }
 
@@ -1169,7 +1208,7 @@
       document.getElementById('bookingForm').reset();
       setDefaultDate();
       
-      // 🆕 NOVO: Restaurar o nome do professor após o reset
+      // Restaurar o nome do professor após o reset
       const savedName = localStorage.getItem('lastUsedName');
       if (savedName) {
         document.getElementById('personName').value = savedName;
@@ -1199,11 +1238,17 @@
       tableBody.innerHTML = '';
 
       if (filteredBookings.length === 0) {
+        const hasActiveFilters = activeFilters.date || activeFilters.professor;
+        const message = hasActiveFilters 
+          ? 'Nenhum agendamento encontrado com os filtros aplicados'
+          : 'Nenhum agendamento futuro encontrado';
+        
         const row = document.createElement('tr');
         row.innerHTML = `
           <td colspan="5" style="text-align: center; padding: 3rem; color: #666;">
             <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📋</div>
-            <div>Nenhum agendamento encontrado</div>
+            <div>${message}</div>
+            ${!hasActiveFilters ? '<div style="font-size: 0.9rem; margin-top: 10px; color: #999;">Use os filtros acima para consultar o histórico</div>' : ''}
           </td>
         `;
         tableBody.appendChild(row);
@@ -1240,11 +1285,10 @@
           <button onclick="cancelBooking('${booking.id}', '${escapeHtml(booking.personName)}')" 
                   class="btn btn-danger btn-small" 
                   title="Cancelar agendamento">
-            🗑️ Cancelar
+            ️ Cancelar
           </button>
         `;
       } else {
-        // 🆕 NOVO: Usa o nome salvo no localStorage para identificar o professor
         const currentPersonName = localStorage.getItem('lastUsedName') || document.getElementById('personName').value.trim();
         if (currentPersonName && currentPersonName.toLowerCase() === booking.personName.toLowerCase()) {
           cancelButton = `
@@ -1337,7 +1381,7 @@
       
       const isExpanded = mobileContent.classList.contains('expanded');
       toggleBtn.querySelector('span:first-child').textContent = 
-        isExpanded ? '📊 Ocultar Estatísticas' : '📊 Ver Estatísticas';
+        isExpanded ? ' Ocultar Estatísticas' : ' Ver Estatísticas';
     }
 
     // ============================================
@@ -1351,7 +1395,7 @@
 
       const btnPdf = document.getElementById('btnPdf');
       const originalText = btnPdf.innerHTML;
-      btnPdf.innerHTML = ' Gerando...';
+      btnPdf.innerHTML = '⏳ Gerando...';
       btnPdf.disabled = true;
 
       try {
@@ -1395,7 +1439,7 @@
             </div>
             
             <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-              <h3 style="color: #333; margin: 0 0 10px 0; font-size: 16px;"> Relatório de Agendamentos</h3>
+              <h3 style="color: #333; margin: 0 0 10px 0; font-size: 16px;">📊 Relatório de Agendamentos</h3>
               <p style="margin: 5px 0; font-size: 13px;"><strong>Data de geração:</strong> ${dataGeracao}</p>
               <p style="margin: 5px 0; font-size: 13px;"><strong>Total de registros:</strong> ${filteredBookings.length} agendamento(s)</p>
             </div>
