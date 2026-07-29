@@ -143,7 +143,7 @@
     .btn-pdf:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4); }
 
     .table-container { overflow-x: auto; margin-top: 20px; border-radius: 8px; border: 1px solid #ddd; -webkit-overflow-scrolling: touch; }
-    table { width: 100%; border-collapse: collapse; background: white; min-width: 600px; }
+    table { width: 100%; border-collapse: collapse; background: white; min-width: 700px; } /* Aumentado para 700px para caber a nova coluna */
     th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; white-space: nowrap; }
     th { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
     tr:hover { background: #f8f9fa; }
@@ -319,6 +319,10 @@
               <label for="endTime">⏰ Hora de Término *</label>
               <input type="time" id="endTime" required>
             </div>
+            <div class="form-group">
+              <label for="turma">🏫 Turma *</label>
+              <input type="text" id="turma" placeholder="Ex: 9º Ano A" required>
+            </div>
           </div>
           <button type="submit" class="btn btn-primary">✅ Realizar Agendamento</button>
         </form>
@@ -338,7 +342,8 @@
               <tr>
                 <th>📅 Data</th>
                 <th>⏰ Horário</th>
-                <th>👨‍🏫 Professor (a)</th>
+                <th>👨🏫 Professor (a)</th>
+                <th>🏫 Turma</th>
                 <th>📊 Status</th>
                 <th>🔧 Ações</th>
               </tr>
@@ -362,7 +367,7 @@
         <button type="submit" class="btn btn-primary">Entrar</button>
         <button type="button" class="btn btn-secondary" onclick="closeLoginModal()" style="margin-top: 10px;">Cancelar</button>
       </form>
-      <div class="login-hint">🔒 Acesso restrito à coordenação e direção</div>
+      <div class="login-hint"> Acesso restrito à coordenação e direção</div>
     </div>
   </div>
 
@@ -397,7 +402,7 @@
     let activeFilters = { date: '', professor: '' };
 
     document.addEventListener('DOMContentLoaded', () => {
-      setDefaultDate(); // Define as datas antes de carregar
+      setDefaultDate();
       loadBookings();
       setupEventListeners();
       checkAdminSession();
@@ -420,15 +425,12 @@
       }
     }
 
-    // ✅ AJUSTE PRINCIPAL: Filtro de data vem em branco para mostrar TODOS os futuros
     function setDefaultDate() {
       const today = new Date().toISOString().split('T')[0];
-      
       const bookingDate = document.getElementById('bookingDate');
-      if (bookingDate) bookingDate.value = today; // Novo agendamento vem com hoje
-      
+      if (bookingDate) bookingDate.value = today;
       const filterDate = document.getElementById('filterDate');
-      if (filterDate) filterDate.value = ''; // Filtro de consulta vem EM BRANCO
+      if (filterDate) filterDate.value = '';
     }
 
     function checkAdminSession() {
@@ -500,7 +502,7 @@
           snapshot.forEach((doc) => {
             bookings.push({ id: doc.id, ...doc.data() });
           });
-          applyFilters(); // Aplica os filtros (que estarão em branco, mostrando todos os futuros)
+          applyFilters();
           updateStats();
         }, (error) => {
           console.error('❌ Erro ao carregar:', error);
@@ -508,12 +510,13 @@
         });
     }
 
-    async function addBooking(personName, date, startTime, endTime) {
+    async function addBooking(personName, date, startTime, endTime, turma) {
       const booking = {
         personName: personName.trim(),
         date: date,
         startTime: startTime,
         endTime: endTime,
+        turma: turma.trim(),
         status: 'Ocupado',
         createdAt: new Date().toISOString()
       };
@@ -549,7 +552,7 @@
 
     async function clearAllBookings() {
       if (!isAdmin) {
-        showModal('⚠️', 'Apenas administradores podem limpar todos os agendamentos!');
+        showModal('️', 'Apenas administradores podem limpar todos os agendamentos!');
         return;
       }
       if (confirm('⚠️ ATENÇÃO: Apagar TODOS os agendamentos?')) {
@@ -562,7 +565,7 @@
             showModal('🗑️', 'Todos os agendamentos foram removidos!');
           } catch (error) {
             console.error('❌ Erro ao limpar:', error);
-            showModal('❌', 'Erro ao limpar agendamentos.');
+            showModal('', 'Erro ao limpar agendamentos.');
           }
         }
       }
@@ -590,8 +593,6 @@
         const matchProfessor = !filterProfessor || booking.personName.toLowerCase().includes(filterProfessor);
         const isPast = isBookingPast(booking);
 
-        // Se houver filtros, mostra o que bater (inclusive passados para consulta).
-        // Se NÃO houver filtros, esconde os passados e mostra TODOS os futuros.
         return matchDate && matchProfessor && (hasActiveFilters || !isPast);
       });
 
@@ -611,18 +612,20 @@
       const date = document.getElementById('bookingDate').value;
       const startTime = document.getElementById('startTime').value;
       const endTime = document.getElementById('endTime').value;
+      const turma = document.getElementById('turma').value;
 
       if (!personName) { showModal('⚠️', 'Por favor, selecione seu nome na lista!'); return; }
       if (!date || !startTime || !endTime) { showModal('⚠️', 'Por favor, preencha todos os campos!'); return; }
+      if (!turma) { showModal('️', 'Por favor, informe a turma!'); return; }
       if (startTime >= endTime) { showModal('⚠️', 'O horário de término deve ser maior que o de início!'); return; }
       if (hasTimeConflict(date, startTime, endTime)) { showModal('⚠️', 'Já existe um agendamento neste horário!'); return; }
 
-      addBooking(personName, date, startTime, endTime);
+      addBooking(personName, date, startTime, endTime, turma);
       
-      // Limpa data e hora, mas mantém o professor selecionado
       document.getElementById('bookingDate').value = '';
       document.getElementById('startTime').value = '';
       document.getElementById('endTime').value = '';
+      document.getElementById('turma').value = ''; // Limpa o campo turma
       
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('bookingDate').value = today;
@@ -647,7 +650,7 @@
         const message = hasActiveFilters ? 'Nenhum agendamento encontrado com os filtros aplicados' : 'Nenhum agendamento futuro encontrado';
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td colspan="5" style="text-align: center; padding: 3rem; color: #666;">
+          <td colspan="6" style="text-align: center; padding: 3rem; color: #666;">
             <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📋</div>
             <div>${message}</div>
             ${!hasActiveFilters ? '<div style="font-size: 0.9rem; margin-top: 10px; color: #999;">Use os filtros acima para consultar o histórico</div>' : ''}
@@ -682,6 +685,7 @@
           <td>${dateFormatted}</td>
           <td>${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}</td>
           <td>${escapeHtml(booking.personName)}</td>
+          <td>${escapeHtml(booking.turma || '-')}</td>
           <td><span class="status-badge status-ocupado">${booking.status}</span></td>
           <td>${cancelButton}</td>`;
         tableBody.appendChild(row);
@@ -743,7 +747,7 @@
       }
       const btnPdf = document.getElementById('btnPdf');
       const originalText = btnPdf.innerHTML;
-      btnPdf.innerHTML = '⏳ Gerando...';
+      btnPdf.innerHTML = ' Gerando...';
       btnPdf.disabled = true;
 
       try {
@@ -760,6 +764,7 @@
             <td style="border: 1px solid #ddd; padding: 8px;">${dateFormatted}</td>
             <td style="border: 1px solid #ddd; padding: 8px;">${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}</td>
             <td style="border: 1px solid #ddd; padding: 8px;">${escapeHtml(booking.personName)}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${escapeHtml(booking.turma || '-')}</td>
             <td style="border: 1px solid #ddd; padding: 8px;">${booking.status}</td>
           </tr>`;
         });
@@ -772,7 +777,7 @@
               <p style="color: #666; margin: 5px 0; font-size: 12px;">Antônio Martins - RN | Fundada em 1935</p>
             </div>
             <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-              <h3 style="color: #333; margin: 0 0 10px 0; font-size: 16px;">📊 Relatório de Agendamentos</h3>
+              <h3 style="color: #333; margin: 0 0 10px 0; font-size: 16px;"> Relatório de Agendamentos</h3>
               <p style="margin: 5px 0; font-size: 13px;"><strong>Data de geração:</strong> ${dataGeracao}</p>
               <p style="margin: 5px 0; font-size: 13px;"><strong>Total de registros:</strong> ${filteredBookings.length} agendamento(s)</p>
             </div>
@@ -783,6 +788,7 @@
                   <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Data</th>
                   <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Horário</th>
                   <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Professor (a)</th>
+                  <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Turma</th>
                   <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Status</th>
                 </tr>
               </thead>
